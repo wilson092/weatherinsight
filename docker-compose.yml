@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  php:
+    build:
+      context: ./php
+    container_name: ${COMPOSE_PROJECT_NAME}_php
+    # Teruskan variabel PROJECT_NAME ke dalam kontainer
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - XDEBUG=${XDEBUG:-false}
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+  nginx:
+    build:
+      context: ./nginx
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - php
+  db:
+    image: mariadb:10.11
+    container_name: ${COMPOSE_PROJECT_NAME}_db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "13306:3306"
+    environment:
+      # Database ini akan dibuat saat kontainer pertama kali dijalankan
+      MYSQL_DATABASE: ${PROJECT_NAME}
+      MYSQL_ROOT_PASSWORD: p455w0rd
+    volumes:
+      - ./db/conf.d:/etc/mysql/conf.d
+      - ./db/data:/var/lib/mysql
