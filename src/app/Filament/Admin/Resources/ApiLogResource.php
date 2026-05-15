@@ -66,4 +66,8 @@ class ApiLogResource extends Resource
             'index' => Pages\ListApiLogs::route('/'),
         ];
     }
+    public static function canCreate(): bool
+{
+    return false;
+}
 }

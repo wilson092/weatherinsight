@@ -3,53 +3,33 @@
 namespace App\Services\Weather;
 
 use App\Models\WeatherHistory;
+use App\Models\WeatherRule;
 
 class WeatherRuleEngineService
 {
     public function analyze(WeatherHistory $weather): array
-{
-    $temp = $weather->temperature;
+    {
+        $temp = $weather->temperature;
 
-    /*
-    |--------------------------------------------------------------------------
-    | HIGH RISK
-    |--------------------------------------------------------------------------
-    */
+        $rule = WeatherRule::query()
+            ->where('is_active', true)
+            ->where('min_temp', '<=', $temp)
+            ->where('max_temp', '>=', $temp)
+            ->first();
 
-    if ($temp >= 33) {
+        if ($rule) {
 
-        return [
-            'risk' => 'HIGH',
-            'recommendation' => 'Hindari aktivitas di luar ruangan saat siang hari',
-            'insight' => 'Suhu sangat panas dan berisiko menyebabkan dehidrasi',
-        ];
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | MEDIUM RISK
-    |--------------------------------------------------------------------------
-    */
-
-    if ($temp >= 30) {
+            return [
+                'risk' => $rule->risk_level,
+                'recommendation' => $rule->recommendation,
+                'insight' => $rule->insight,
+            ];
+        }
 
         return [
-            'risk' => 'MEDIUM',
-            'recommendation' => 'Gunakan pakaian ringan dan tetap terhidrasi',
-            'insight' => 'Udara terasa panas dan cukup lembab',
+            'risk' => 'LOW',
+            'recommendation' => 'Cuaca normal',
+            'insight' => 'Tidak ada risiko cuaca',
         ];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOW RISK
-    |--------------------------------------------------------------------------
-    */
-
-    return [
-        'risk' => 'LOW',
-        'recommendation' => 'Cuaca normal untuk aktivitas harian',
-        'insight' => 'Tidak ada risiko cuaca signifikan',
-    ];
-}
 }

@@ -49,9 +49,8 @@ class AdminPanelProvider extends PanelProvider
             ->discoverClusters(in: app_path('Filament/Admin/Clusters'), for: 'App\\Filament\\Admin\\Clusters')
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([
-                \App\Filament\Admin\Widgets\WeatherStatsCard::class,
-              
-                \App\Filament\Admin\Widgets\WeatherTemperatureChart::class,
+                \App\Filament\Admin\Widgets\AdminStatsOverview::class,
+                
             ])
             ->navigationGroups([
                 NavigationGroup::make()

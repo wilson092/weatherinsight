@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Columns\TextColumn;
 
 class TrackedCityResource extends Resource
 {
@@ -30,20 +31,26 @@ class TrackedCityResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                //
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+           ->columns([
+
+    TextColumn::make('city')
+        ->searchable()
+        ->sortable()
+        ->badge(),
+
+    TextColumn::make('created_at')
+        ->label('Added At')
+        ->dateTime('d M Y H:i'),
+
+    TextColumn::make('updated_at')
+        ->label('Last Update')
+        ->since(),
+    TextColumn::make('histories_count')
+        ->counts('histories')
+        ->label('total records'),
+
+]);
+           
     }
 
     public static function getRelations(): array

@@ -25,25 +25,31 @@ class WeatherRuleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+   public static function form(Form $form): Form
 {
     return $form
         ->schema([
+
             TextInput::make('name')
                 ->required(),
 
-            Textarea::make('conditions')
+            TextInput::make('min_temp')
+                ->numeric()
                 ->required(),
 
-            Textarea::make('recommendation')
+            TextInput::make('max_temp')
+                ->numeric()
                 ->required(),
 
             Select::make('risk_level')
                 ->options([
-                    'low' => 'Low',
-                    'medium' => 'Medium',
-                    'high' => 'High',
+                    'LOW' => 'LOW',
+                    'MEDIUM' => 'MEDIUM',
+                    'HIGH' => 'HIGH',
                 ])
+                ->required(),
+
+            Textarea::make('recommendation')
                 ->required(),
 
             Textarea::make('insight')
@@ -51,28 +57,36 @@ class WeatherRuleResource extends Resource
 
             Toggle::make('is_active')
                 ->default(true),
+
         ]);
 }
 
     public static function table(Table $table): Table
 {
     return $table
-        ->columns([
-            TextColumn::make('name')
-                ->searchable(),
+      ->columns([
 
-            TextColumn::make('risk_level')
-                ->badge(),
+    TextColumn::make('name')
+        ->searchable(),
 
-            TextColumn::make('recommendation')
-                ->limit(30),
+    TextColumn::make('min_temp')
+        ->suffix('°C'),
 
-            IconColumn::make('is_active')
-                ->boolean(),
+    TextColumn::make('max_temp')
+        ->suffix('°C'),
 
-            TextColumn::make('created_at')
-                ->dateTime(),
-        ])
+    TextColumn::make('risk_level')
+        ->badge()
+        ->color(fn ($state) => match ($state) {
+            'HIGH' => 'danger',
+            'MEDIUM' => 'warning',
+            default => 'success',
+        }),
+
+    IconColumn::make('is_active')
+        ->boolean(),
+
+])
         ->filters([
             //
         ])
