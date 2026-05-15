@@ -7,47 +7,49 @@ use App\Models\WeatherHistory;
 class WeatherRuleEngineService
 {
     public function analyze(WeatherHistory $weather): array
-    {
-        $recommendation = 'Cuaca normal';
-        $risk = 'low';
-        $insight = 'Tidak ada risiko signifikan';
+{
+    $temp = $weather->temperature;
 
-        // HOT WEATHER
-        if ($weather->temperature > 35) {
-            $recommendation = 'Hindari aktivitas siang hari dan perbanyak minum';
-            $risk = 'high';
-            $insight = 'Risiko heatstroke akibat suhu tinggi';
-        }
+    /*
+    |--------------------------------------------------------------------------
+    | HIGH RISK
+    |--------------------------------------------------------------------------
+    */
 
-        // HIGH HUMIDITY
-        if ($weather->humidity > 80) {
-            $recommendation = 'Gunakan pakaian ringan dan tetap terhidrasi';
-            $risk = 'medium';
-            $insight = 'Udara terasa panas dan lembab';
-        }
-
-        // STRONG WIND
-        if ($weather->wind_speed > 30) {
-            $recommendation = 'Waspada angin kencang dan amankan barang ringan';
-            $risk = 'medium';
-            $insight = 'Angin kencang dapat mengganggu aktivitas';
-        }
-
-        // IDEAL WEATHER
-        if (
-            $weather->temperature >= 20 &&
-            $weather->temperature <= 30 &&
-            $weather->humidity < 70
-        ) {
-            $recommendation = 'Sangat cocok untuk aktivitas outdoor';
-            $risk = 'low';
-            $insight = 'Cuaca ideal untuk aktivitas luar ruangan';
-        }
+    if ($temp >= 33) {
 
         return [
-            'recommendation' => $recommendation,
-            'risk' => $risk,
-            'insight' => $insight,
+            'risk' => 'HIGH',
+            'recommendation' => 'Hindari aktivitas di luar ruangan saat siang hari',
+            'insight' => 'Suhu sangat panas dan berisiko menyebabkan dehidrasi',
         ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | MEDIUM RISK
+    |--------------------------------------------------------------------------
+    */
+
+    if ($temp >= 30) {
+
+        return [
+            'risk' => 'MEDIUM',
+            'recommendation' => 'Gunakan pakaian ringan dan tetap terhidrasi',
+            'insight' => 'Udara terasa panas dan cukup lembab',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOW RISK
+    |--------------------------------------------------------------------------
+    */
+
+    return [
+        'risk' => 'LOW',
+        'recommendation' => 'Cuaca normal untuk aktivitas harian',
+        'insight' => 'Tidak ada risiko cuaca signifikan',
+    ];
+}
 }

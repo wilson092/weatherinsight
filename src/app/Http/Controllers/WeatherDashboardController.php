@@ -16,12 +16,16 @@ class WeatherDashboardController extends Controller
         WeatherRuleEngineService $ruleEngine
     ) {
         $city = $request->get('city', 'Jakarta');
-        TrackedCity::firstOrCreate([
-    'city' => $city,
-]);
 
-        // FETCH API
+        TrackedCity::firstOrCreate([
+            'city' => $city,
+        ]);
+
+        // FETCH CURRENT WEATHER
         $data = $service->current($city);
+
+        // FETCH FORECAST
+        $forecast = $service->forecast($city);
 
         // VALIDASI RESPONSE
         if (isset($data['main'])) {
@@ -68,6 +72,7 @@ class WeatherDashboardController extends Controller
         return view('weather.dashboard', [
             'latest' => $latest,
             'history' => $history,
+            'forecast' => $forecast,
             'city' => $city,
         ]);
     }

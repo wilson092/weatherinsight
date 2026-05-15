@@ -19,4 +19,18 @@ class OpenWeatherService
 
         return $response->json();
     }
+
+    public function forecast(string $city = 'Jakarta'): array
+    {
+        $response = Http::get(
+            'https://api.openweathermap.org/data/2.5/forecast',
+            [
+                'q' => $city,
+                'appid' => env('OPENWEATHER_API_KEY'),
+                'units' => 'metric',
+            ]
+        );
+
+        return $response->json();
+    }
 }

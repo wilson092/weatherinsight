@@ -7,6 +7,7 @@ use App\Models\WeatherHistory;
 use App\Services\Weather\OpenWeatherService;
 use App\Services\Weather\WeatherRuleEngineService;
 use App\Models\TrackedCity;
+use App\Models\ApiLog;
 class FetchWeatherCommand extends Command
 {
     /**
@@ -36,6 +37,13 @@ class FetchWeatherCommand extends Command
     foreach ($cities as $city) {
 
         $data = $service->current($city);
+        ApiLog::create([
+    'city' => $city,
+    'endpoint' => 'OpenWeather Current API',
+    'status_code' => isset($data['cod']) ? (int) $data['cod'] : 200,
+    'status' => isset($data['main']) ? 'success' : 'failed',
+    'response' => json_encode($data),
+]);
 
         // VALIDASI API RESPONSE
         if (! isset($data['main'])) {

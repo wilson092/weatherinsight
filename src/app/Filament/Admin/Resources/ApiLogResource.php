@@ -3,81 +3,67 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\ApiLogResource\Pages;
-use App\Filament\Admin\Resources\ApiLogResource\RelationManagers;
 use App\Models\ApiLog;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 
-use Filament\Tables\Columns\TextColumn;
 class ApiLogResource extends Resource
 {
     protected static ?string $model = ApiLog::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
+
+    protected static ?string $navigationLabel = 'Api Logs';
+
+    protected static ?string $navigationGroup = 'Weather Monitoring';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
-{
-    return $form
-        ->schema([
-            TextInput::make('endpoint')
-                ->required(),
-
-            TextInput::make('status_code')
-                ->numeric()
-                ->required(),
-
-            Textarea::make('response')
-                ->columnSpanFull(),
-        ]);
-}
+    {
+        return $form
+            ->schema([
+                //
+            ]);
+    }
 
     public static function table(Table $table): Table
-{
-    return $table
-        ->columns([
-            TextColumn::make('endpoint')
-                ->searchable(),
-
-            TextColumn::make('status_code')
-                ->badge(),
-
-            TextColumn::make('created_at')
-                ->dateTime(),
-        ])
-        ->filters([
-            //
-        ])
-        ->actions([
-            Tables\Actions\ViewAction::make(),
-            Tables\Actions\EditAction::make(),
-        ])
-        ->bulkActions([
-            Tables\Actions\BulkActionGroup::make([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]),
-        ]);
-}
-
-    public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return $table
+            ->columns([
+
+                Tables\Columns\TextColumn::make('city')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('endpoint')
+                    ->limit(40),
+
+                Tables\Columns\TextColumn::make('status_code')
+                    ->badge(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->colors([
+                        'success' => 'success',
+                        'failed' => 'danger',
+                    ]),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('d M Y H:i'),
+
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+            ]);
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListApiLogs::route('/'),
-            'create' => Pages\CreateApiLog::route('/create'),
-            'edit' => Pages\EditApiLog::route('/{record}/edit'),
         ];
     }
 }
