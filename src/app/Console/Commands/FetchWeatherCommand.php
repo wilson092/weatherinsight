@@ -32,9 +32,10 @@ class FetchWeatherCommand extends Command
     WeatherRuleEngineService $ruleEngine
 ) {
 
-    $cities = TrackedCity::pluck('city');
+    $cities = TrackedCity::all();
 
-    foreach ($cities as $city) {
+    foreach ($cities as $trackedCity) {
+        $city = $trackedCity->city;
 
         $data = $service->current($city);
         ApiLog::create([
@@ -55,6 +56,7 @@ class FetchWeatherCommand extends Command
 
         // SIMPAN DATA WEATHER
         $weather = WeatherHistory::create([
+            'tracked_city_id' => $trackedCity->id,
             'city' => $city,
 
             'temperature' => $data['main']['temp'],

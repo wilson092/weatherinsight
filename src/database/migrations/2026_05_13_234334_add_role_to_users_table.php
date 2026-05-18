@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-    $table->string('role')->default('user');
-});
+            $table->foreignId('role_id')->default(2)->constrained('roles')->onDelete('set default');
+        });
     }
 
     /**
@@ -22,7 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropForeignKey(['role_id']);
+            $table->dropColumn('role_id');
         });
     }
 };

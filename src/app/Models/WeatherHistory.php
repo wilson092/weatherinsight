@@ -8,19 +8,21 @@ class WeatherHistory extends Model
 {
     //
     protected $fillable = [
-    'city',
-    'temperature',
-    'humidity',
-    'pressure',
-    'wind_speed',
-    'weather_main',
-    'weather_description',
-    'weather_icon',
-    'recorded_at',
-    'recommendation',
-    'insight',
-    'risk_level',
-];
+        'user_id',
+        'tracked_city_id',
+        'city',
+        'temperature',
+        'humidity',
+        'pressure',
+        'wind_speed',
+        'weather_main',
+        'weather_description',
+        'weather_icon',
+        'recorded_at',
+        'recommendation',
+        'insight',
+        'risk_level',
+    ];
 protected $casts = [
     'recorded_at' => 'datetime',
 

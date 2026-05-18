@@ -17,7 +17,7 @@ class WeatherDashboardController extends Controller
     ) {
         $city = $request->get('city', 'Jakarta');
 
-        TrackedCity::firstOrCreate([
+        $trackedCity = TrackedCity::firstOrCreate([
             'city' => $city,
         ]);
 
@@ -32,6 +32,8 @@ class WeatherDashboardController extends Controller
 
             // SIMPAN WEATHER
             $weather = WeatherHistory::create([
+                'tracked_city_id' => $trackedCity->id,
+                'user_id' => auth()->id(),
                 'city' => $city,
 
                 'temperature' => $data['main']['temp'],
