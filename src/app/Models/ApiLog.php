@@ -12,5 +12,6 @@ class ApiLog extends Model
         'status_code',
         'status',
         'response',
+        
     ];
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Weather;
 
+use App\Models\ApiLog;
 use Illuminate\Support\Facades\Http;
 
 class OpenWeatherService
@@ -17,6 +18,13 @@ class OpenWeatherService
             ]
         );
 
+        ApiLog::create([
+            'city' => $city,
+            'endpoint' => 'OpenWeather Current API',
+            'status_code' => $response->status(),
+            'status' => $response->successful() ? 'success' : 'failed',
+        ]);
+
         return $response->json();
     }
 
@@ -30,6 +38,13 @@ class OpenWeatherService
                 'units' => 'metric',
             ]
         );
+
+        ApiLog::create([
+            'city' => $city,
+            'endpoint' => 'OpenWeather Forecast API',
+            'status_code' => $response->status(),
+            'status' => $response->successful() ? 'success' : 'failed',
+        ]);
 
         return $response->json();
     }
