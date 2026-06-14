@@ -4,22 +4,17 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\WeatherHistoryResource\Pages;
 use App\Models\WeatherHistory;
-use Filament\Forms;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\DateTimePicker;
-
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
-
-use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
-
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class WeatherHistoryResource extends Resource
@@ -69,6 +64,12 @@ class WeatherHistoryResource extends Resource
 
                 TextInput::make('risk_level'),
 
+                TextInput::make('risk_score')
+                    ->numeric()
+                    ->suffix('/100')
+                    ->disabled()
+                    ->dehydrated(false),
+
                 Textarea::make('recommendation')
                     ->columnSpanFull(),
 
@@ -115,8 +116,14 @@ class WeatherHistoryResource extends Resource
 
                 TextColumn::make('wind_speed')
                     ->label('Wind')
-                    ->suffix(' km/h')
+                    ->suffix(' m/s')
                     ->sortable(),
+
+                TextColumn::make('risk_score')
+                    ->label('Risk Score')
+                    ->suffix('/100')
+                    ->sortable()
+                    ->weight('bold'),
 
                 BadgeColumn::make('weather_main')
                     ->colors([
@@ -158,8 +165,7 @@ class WeatherHistoryResource extends Resource
                     ]),
 
                 Filter::make('today')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->whereDate('recorded_at', now())
+                    ->query(fn (Builder $query): Builder => $query->whereDate('recorded_at', now())
                     ),
 
             ])
@@ -200,9 +206,9 @@ class WeatherHistoryResource extends Resource
             'edit' => Pages\EditWeatherHistory::route('/{record}/edit'),
         ];
     }
+
     public static function canCreate(): bool
     {
         return false;
-    }   
-    
+    }
 }

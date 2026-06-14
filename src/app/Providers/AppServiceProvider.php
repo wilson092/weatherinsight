@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\WeatherHistory;
+use App\Observers\WeatherHistoryObserver;
 use App\Policies\ActivityPolicy;
 use Filament\Actions\MountableAction;
 use Filament\Notifications\Livewire\Notifications;
@@ -29,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        WeatherHistory::observe(WeatherHistoryObserver::class);
         Gate::policy(Activity::class, ActivityPolicy::class);
         Page::formActionsAlignment(Alignment::Right);
         Notifications::alignment(Alignment::End);

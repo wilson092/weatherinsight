@@ -50,8 +50,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([
                 \App\Filament\Admin\Widgets\AdminStatsOverview::class,
-              
-                
+                \App\Filament\Admin\Widgets\WeatherIntelligenceStatsOverview::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make()

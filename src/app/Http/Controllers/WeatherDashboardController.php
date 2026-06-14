@@ -2,18 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TrackedCity;
 use App\Models\WeatherHistory;
 use App\Services\Weather\OpenWeatherService;
+use App\Services\Weather\WeatherAlertService;
+use App\Services\Weather\WeatherComparisonService;
+use App\Services\Weather\WeatherLeaderboardService;
+use App\Services\Weather\WeatherRiskAnalysisService;
 use App\Services\Weather\WeatherRuleEngineService;
 use Illuminate\Http\Request;
-use App\Models\TrackedCity;
 
 class WeatherDashboardController extends Controller
 {
     public function __invoke(
         Request $request,
         OpenWeatherService $service,
-        WeatherRuleEngineService $ruleEngine
+        WeatherRuleEngineService $ruleEngine,
+        WeatherRiskAnalysisService $riskAnalysisService,
+        WeatherAlertService $alertService,
+        WeatherComparisonService $comparisonService,
+        WeatherLeaderboardService $leaderboardService,
     ) {
         $city = $request->get('city', 'Jakarta');
 
@@ -71,11 +79,24 @@ class WeatherDashboardController extends Controller
             ->get()
             ->reverse();
 
+        // WEATHER INTELLIGENCE LAYER
+        $riskAnalysis = $latest ? $riskAnalysisService->analyze($latest) : null;
+        $alerts = $alertService->forWeather($latest);
+        $comparison = $comparisonService->findOrFetch(
+            $request->get('compare_city'),
+            auth()->id(),
+        );
+        $leaderboards = $leaderboardService->rankings();
+
         return view('weather.dashboard', [
             'latest' => $latest,
             'history' => $history,
             'forecast' => $forecast,
             'city' => $city,
+            'riskAnalysis' => $riskAnalysis,
+            'alerts' => $alerts,
+            'comparison' => $comparison,
+            'leaderboards' => $leaderboards,
         ]);
     }
 }

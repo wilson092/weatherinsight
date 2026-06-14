@@ -22,13 +22,15 @@ class WeatherHistory extends Model
         'recommendation',
         'insight',
         'risk_level',
+        'risk_score',
     ];
-protected $casts = [
-    'recorded_at' => 'datetime',
 
-    'temperature' => 'float',
-    'humidity' => 'float',
-    'pressure' => 'float',
-    'wind_speed' => 'float',
-];
+    protected $casts = [
+        'recorded_at' => 'datetime',
+        'temperature' => 'float',
+        'humidity' => 'float',
+        'pressure' => 'float',
+        'wind_speed' => 'float',
+        'risk_score' => 'integer',
+    ];
 }
