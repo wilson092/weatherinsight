@@ -123,6 +123,9 @@ it('uses only the latest snapshot of each city for leaderboards', function () {
 it('fetches and stores a comparison city when no history exists', function () {
     Http::fake([
         'api.openweathermap.org/*' => Http::response([
+            'coord' => ['lat' => 3.5952, 'lon' => 98.6722],
+            'sys' => ['country' => 'ID'],
+            'timezone' => 25200,
             'main' => ['temp' => 36, 'humidity' => 88, 'pressure' => 1012],
             'wind' => ['speed' => 8],
             'weather' => [[
@@ -150,6 +153,9 @@ it('renders the weather intelligence dashboard sections', function () {
         }
 
         return Http::response([
+            'coord' => ['lat' => -6.2088, 'lon' => 106.8456],
+            'sys' => ['country' => 'ID'],
+            'timezone' => 25200,
             'main' => ['temp' => 32, 'humidity' => 75, 'pressure' => 1010],
             'wind' => ['speed' => 6],
             'weather' => [[
@@ -167,6 +173,8 @@ it('renders the weather intelligence dashboard sections', function () {
         ->assertSee('Weather Risk Score')
         ->assertSee('Weather Alert Center')
         ->assertSee('Weather Comparison')
+        ->assertSee('Weather Map')
+        ->assertSee('106.84560')
         ->assertSee('Extreme Weather Leaderboard')
         ->assertSee('Weather History');
 });

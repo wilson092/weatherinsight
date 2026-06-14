@@ -6,6 +6,19 @@
     <meta name="theme-color" content="#071426">
     <title>Weather Intelligence Dashboard</title>
 
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+        defer
+    ></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -30,6 +43,166 @@
             border: 1px solid rgba(255, 255, 255, .13);
             box-shadow: 0 24px 70px rgba(2, 8, 23, .28);
             backdrop-filter: blur(20px);
+        }
+
+        .leaflet-container {
+            background: #0f172a;
+            color: #0f172a;
+            font-family: inherit;
+            overflow: hidden;
+            touch-action: pan-x pan-y;
+        }
+
+        .leaflet-pane,
+        .leaflet-tile,
+        .leaflet-marker-icon,
+        .leaflet-marker-shadow,
+        .leaflet-tile-container,
+        .leaflet-pane > svg,
+        .leaflet-pane > canvas,
+        .leaflet-zoom-box,
+        .leaflet-image-layer,
+        .leaflet-layer {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .leaflet-tile,
+        .leaflet-marker-icon,
+        .leaflet-marker-shadow {
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .leaflet-tile {
+            filter: saturate(.9) contrast(.96) brightness(.92);
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        .leaflet-pane {
+            z-index: 400;
+        }
+
+        .leaflet-tile-pane {
+            z-index: 200;
+        }
+
+        .leaflet-overlay-pane {
+            z-index: 400;
+        }
+
+        .leaflet-shadow-pane {
+            z-index: 500;
+        }
+
+        .leaflet-marker-pane {
+            z-index: 600;
+        }
+
+        .leaflet-tooltip-pane {
+            z-index: 650;
+        }
+
+        .leaflet-popup-pane {
+            z-index: 700;
+        }
+
+        .leaflet-control {
+            position: relative;
+            z-index: 800;
+            pointer-events: auto;
+        }
+
+        .leaflet-top,
+        .leaflet-bottom {
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .leaflet-top {
+            top: 0;
+        }
+
+        .leaflet-right {
+            right: 0;
+        }
+
+        .leaflet-bottom {
+            bottom: 0;
+        }
+
+        .leaflet-left {
+            left: 0;
+        }
+
+        .leaflet-control-container .leaflet-top,
+        .leaflet-control-container .leaflet-bottom {
+            transform: translate3d(0, 0, 0);
+        }
+
+        .leaflet-left .leaflet-control {
+            margin-left: 10px;
+        }
+
+        .leaflet-top .leaflet-control {
+            margin-top: 10px;
+        }
+
+        .leaflet-right .leaflet-control {
+            margin-right: 10px;
+        }
+
+        .leaflet-bottom .leaflet-control {
+            margin-bottom: 10px;
+        }
+
+        .leaflet-control-zoom a {
+            background: rgba(15, 23, 42, .88);
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+            color: #e2e8f0;
+            display: block;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            text-decoration: none;
+            width: 30px;
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(15, 23, 42, .78) !important;
+            color: #cbd5e1 !important;
+        }
+
+        .leaflet-control-attribution a {
+            color: #67e8f9 !important;
+        }
+
+        .leaflet-popup-content-wrapper,
+        .leaflet-popup-tip {
+            background: rgba(15, 23, 42, .95);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, .14);
+            box-shadow: 0 20px 45px rgba(2, 8, 23, .35);
+        }
+
+        .weather-map-popup {
+            display: grid;
+            gap: .25rem;
+            min-width: 10rem;
+        }
+
+        .weather-map-popup strong {
+            color: #fff;
+            font-size: .95rem;
+        }
+
+        .weather-map-popup span {
+            color: #cbd5e1;
+            font-size: .78rem;
+            text-transform: capitalize;
         }
 
     </style>
@@ -101,6 +274,7 @@
             <x-weather.alert-center :alerts="$alerts" />
             <x-weather.comparison :latest="$latest" :comparison="$comparison" :city="$city" />
             <x-weather.forecast :forecast="$forecast" />
+            <x-weather.map :latest="$latest" />
             <x-weather.leaderboard :leaderboards="$leaderboards" />
             <x-weather.history :history="$history" />
         </main>

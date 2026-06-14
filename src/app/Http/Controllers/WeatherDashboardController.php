@@ -43,6 +43,10 @@ class WeatherDashboardController extends Controller
                 'tracked_city_id' => $trackedCity->id,
                 'user_id' => auth()->id(),
                 'city' => $city,
+                'latitude' => data_get($data, 'coord.lat'),
+                'longitude' => data_get($data, 'coord.lon'),
+                'timezone' => data_get($data, 'timezone'),
+                'country' => data_get($data, 'sys.country'),
 
                 'temperature' => $data['main']['temp'],
                 'humidity' => $data['main']['humidity'],

@@ -11,6 +11,10 @@ class WeatherHistory extends Model
         'user_id',
         'tracked_city_id',
         'city',
+        'latitude',
+        'longitude',
+        'timezone',
+        'country',
         'temperature',
         'humidity',
         'pressure',
@@ -27,6 +31,9 @@ class WeatherHistory extends Model
 
     protected $casts = [
         'recorded_at' => 'datetime',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'timezone' => 'integer',
         'temperature' => 'float',
         'humidity' => 'float',
         'pressure' => 'float',
