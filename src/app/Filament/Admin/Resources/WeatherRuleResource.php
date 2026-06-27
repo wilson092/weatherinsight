@@ -25,71 +25,74 @@ class WeatherRuleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-   public static function form(Form $form): Form
-{
-    return $form
-        ->schema([
-
-            TextInput::make('name')
-                ->required(),
-
-            TextInput::make('min_temp')
-                ->numeric()
-                ->required(),
-
-            TextInput::make('max_temp')
-                ->numeric()
-                ->required(),
-
-            Select::make('risk_level')
-                ->options([
-                    'LOW' => 'LOW',
-                    'MEDIUM' => 'MEDIUM',
-                    'HIGH' => 'HIGH',
-                ])
-                ->required(),
-
-            Textarea::make('recommendation')
-                ->required(),
-
-            Textarea::make('insight')
-                ->required(),
-
-            Toggle::make('is_active')
-                ->default(true),
-
-        ]);
-}
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('name')
+                    ->label('Nama Aturan')
+                    ->required()
+                    ->maxLength(255)
+                    ->columnSpanFull(),
+                Select::make('rule_type')
+                    ->label('Parameter Cuaca')
+                    ->options([
+                        'temperature' => 'Suhu (°C)',
+                        'humidity' => 'Kelembapan (%)',
+                        'wind_speed' => 'Kecepatan Angin (m/s)',
+                        'pressure' => 'Tekanan Udara (hPa)',
+                    ])
+                    ->required()
+                    ->reactive(),
+                Select::make('operator')
+                    ->label('Operator')
+                    ->options([
+                        '>' => 'Lebih dari (>)',
+                        '<' => 'Kurang dari (<)',
+                        'between' => 'Di antara (between)',
+                    ])
+                    ->required()
+                    ->reactive(),
+                TextInput::make('threshold_value')
+                    ->label('Nilai Ambang Batas')
+                    ->numeric()
+                    ->visible(fn (callable $get) => in_array($get('operator'), ['>', '<']))
+                    ->required(fn (callable $get) => in_array($get('operator'), ['>', '<'])),
+                TextInput::make('min_value')
+                    ->label('Nilai Minimum')
+                    ->numeric()
+                    ->visible(fn (callable $get) => $get('operator') === 'between')
+                    ->required(fn (callable $get) => $get('operator') === 'between'),
+                TextInput::make('max_value')
+                    ->label('Nilai Maksimum')
+                    ->numeric()
+                    ->visible(fn (callable $get) => $get('operator') === 'between')
+                    ->required(fn (callable $get) => $get('operator') === 'between'),
+                TextInput::make('score_weight')
+                    ->label('Bobot Skor')
+                    ->numeric()
+                    ->required(),
+                Textarea::make('description')
+                    ->label('Deskripsi')
+                    ->columnSpanFull(),
+                Toggle::make('is_active')
+                    ->label('Aktif')
+                    ->default(true),
+            ]);
+    }
 
     public static function table(Table $table): Table
-{
-    return $table
-      ->columns([
-
-    TextColumn::make('name')
-        ->searchable(),
-
-    TextColumn::make('min_temp')
-        ->suffix('°C'),
-
-    TextColumn::make('max_temp')
-        ->suffix('°C'),
-
-    TextColumn::make('risk_level')
-        ->badge()
-        ->color(fn ($state) => match ($state) {
-            'HIGH' => 'danger',
-            'MEDIUM' => 'warning',
-            default => 'success',
-        }),
-
-    IconColumn::make('is_active')
-        ->boolean(),
-
-])
-        ->filters([
-            //
-        ])
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')->label('Nama Aturan')->searchable()->sortable(),
+                TextColumn::make('kondisi')->label('Kondisi'),
+                TextColumn::make('score_weight')->label('Bobot Skor')->sortable(),
+                IconColumn::make('is_active')->label('Aktif')->boolean(),
+            ])
+            ->filters([
+                //
+            ])
         ->actions([
             Tables\Actions\EditAction::make(),
         ])

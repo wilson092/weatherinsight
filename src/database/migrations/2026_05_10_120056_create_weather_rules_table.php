@@ -12,27 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('weather_rules', function (Blueprint $table) {
-    $table->id();
-
-    $table->string('name');
-
-    $table->json('conditions');
-
-    $table->text('recommendation');
-
-    $table->enum('risk_level', [
-        'low',
-        'medium',
-        'high'
-    ]);
-
-    $table->text('insight');
-
-    $table->boolean('is_active')
-        ->default(true);
-
-    $table->timestamps();
-});
+            $table->id();
+            $table->string('name');
+            $table->string('rule_type')->comment('e.g., temperature, humidity, wind_speed, pressure');
+            $table->string('operator')->comment('e.g., >, <, =, between');
+            $table->decimal('threshold_value', 8, 2)->nullable()->comment('For single value comparisons');
+            $table->decimal('min_value', 8, 2)->nullable()->comment('For range comparisons (min)');
+            $table->decimal('max_value', 8, 2)->nullable()->comment('For range comparisons (max)');
+            $table->integer('score_weight')->comment('The score to add if the rule is met');
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

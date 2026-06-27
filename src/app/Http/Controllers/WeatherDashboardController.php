@@ -8,7 +8,6 @@ use App\Services\Weather\OpenWeatherService;
 use App\Services\Weather\WeatherAlertService;
 use App\Services\Weather\WeatherComparisonService;
 use App\Services\Weather\WeatherLeaderboardService;
-use App\Services\Weather\WeatherRiskAnalysisService;
 use App\Services\Weather\WeatherRuleEngineService;
 use Illuminate\Http\Request;
 
@@ -18,7 +17,6 @@ class WeatherDashboardController extends Controller
         Request $request,
         OpenWeatherService $service,
         WeatherRuleEngineService $ruleEngine,
-        WeatherRiskAnalysisService $riskAnalysisService,
         WeatherAlertService $alertService,
         WeatherComparisonService $comparisonService,
         WeatherLeaderboardService $leaderboardService,
@@ -84,8 +82,8 @@ class WeatherDashboardController extends Controller
             ->reverse();
 
         // WEATHER INTELLIGENCE LAYER
-        $riskAnalysis = $latest ? $riskAnalysisService->analyze($latest) : null;
-        $alerts = $alertService->forWeather($latest);
+        $riskAnalysis = $latest ? $ruleEngine->analyze($latest) : null;
+        $alerts = $latest ? $alertService->forWeather($latest) : [];
         $comparison = $comparisonService->findOrFetch(
             $request->get('compare_city'),
             auth()->id(),

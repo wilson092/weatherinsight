@@ -9,49 +9,58 @@ class WeatherRuleSeeder extends Seeder
 {
     public function run(): void
     {
-        WeatherRule::create([
-            'name' => 'Low Temperature',
+        WeatherRule::truncate();
 
-            'min_temp' => 0,
-            'max_temp' => 28,
+        $rules = [
+            [
+                'name' => 'Suhu Tinggi',
+                'rule_type' => 'temperature',
+                'operator' => '>',
+                'threshold_value' => 35,
+                'score_weight' => 20,
+                'description' => 'Suhu di atas 35°C menambah 20 poin risiko.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Kelembapan Tinggi',
+                'rule_type' => 'humidity',
+                'operator' => '>',
+                'threshold_value' => 85,
+                'score_weight' => 25,
+                'description' => 'Kelembaban di atas 85% menambah 25 poin risiko.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Angin Kencang',
+                'rule_type' => 'wind_speed',
+                'operator' => '>',
+                'threshold_value' => 20,
+                'score_weight' => 15,
+                'description' => 'Kecepatan angin di atas 20 m/s menambah 15 poin risiko.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Tekanan Udara Rendah',
+                'rule_type' => 'pressure',
+                'operator' => '<',
+                'threshold_value' => 1000,
+                'score_weight' => 10,
+                'description' => 'Tekanan udara di bawah 1000 hPa menambah 10 poin risiko.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Tekanan Udara Tinggi',
+                'rule_type' => 'pressure',
+                'operator' => '>',
+                'threshold_value' => 1020,
+                'score_weight' => 10,
+                'description' => 'Tekanan udara di atas 1020 hPa menambah 10 poin risiko.',
+                'is_active' => true,
+            ],
+        ];
 
-            'risk_level' => 'LOW',
-
-            'recommendation' => 'Cuaca normal untuk aktivitas harian',
-
-            'insight' => 'Tidak ada risiko cuaca signifikan',
-
-            'is_active' => true,
-        ]);
-
-        WeatherRule::create([
-            'name' => 'Medium Temperature',
-
-            'min_temp' => 29,
-            'max_temp' => 32,
-
-            'risk_level' => 'MEDIUM',
-
-            'recommendation' => 'Gunakan pakaian ringan dan tetap terhidrasi',
-
-            'insight' => 'Udara cukup panas dan lembab',
-
-            'is_active' => true,
-        ]);
-
-        WeatherRule::create([
-            'name' => 'High Temperature',
-
-            'min_temp' => 33,
-            'max_temp' => 100,
-
-            'risk_level' => 'HIGH',
-
-            'recommendation' => 'Hindari aktivitas di luar ruangan saat siang hari',
-
-            'insight' => 'Suhu sangat panas dan berisiko menyebabkan dehidrasi',
-
-            'is_active' => true,
-        ]);
+        foreach ($rules as $rule) {
+            WeatherRule::create($rule);
+        }
     }
 }
