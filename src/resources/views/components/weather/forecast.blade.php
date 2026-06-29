@@ -2,13 +2,35 @@
 
 @php
     $forecastByDay = [];
+    // Group forecasts by day
     foreach ($forecast['list'] ?? [] as $item) {
         $day = \Carbon\Carbon::parse($item['dt_txt'])->format('Y-m-d');
-        if (! isset($forecastByDay[$day])) {
-            $forecastByDay[$day] = $item;
+        $forecastByDay[$day][] = $item;
+    }
+
+    $dailyForecasts = [];
+    foreach ($forecastByDay as $day => $forecasts) {
+        // Find the forecast closest to noon (12:00)
+        $closestForecast = null;
+        $smallestDiff = PHP_INT_MAX;
+
+        foreach ($forecasts as $item) {
+            $time = \Carbon\Carbon::parse($item['dt_txt']);
+            $diff = abs($time->hour - 12);
+
+            if ($diff < $smallestDiff) {
+                $smallestDiff = $diff;
+                $closestForecast = $item;
+            }
+        }
+
+        if ($closestForecast) {
+            $dailyForecasts[] = $closestForecast;
         }
     }
-    $dailyForecasts = array_values(array_slice($forecastByDay, 0, 5));
+
+    // Ensure we only take up to 5 days
+    $dailyForecasts = array_slice($dailyForecasts, 0, 5);
 @endphp
 
 <section aria-labelledby="forecast-title" class="glass-panel rounded-3xl p-6 sm:p-8">

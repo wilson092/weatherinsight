@@ -216,7 +216,7 @@
                 </div>
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Monitoring Console</p>
-                    <h1 class="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">Weather Intelligence</h1>
+                    <h1 class="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">WeatherInsight</h1>
                 </div>
             </div>
 
