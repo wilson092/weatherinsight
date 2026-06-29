@@ -54,6 +54,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make()
+                    ->label('WEATHER RULE MANAGEMENT'),
+                NavigationGroup::make()
+                    ->label('Weather Monitoring'),
+                NavigationGroup::make()
                     ->label('Administration'),
             ])
             ->userMenuItems([

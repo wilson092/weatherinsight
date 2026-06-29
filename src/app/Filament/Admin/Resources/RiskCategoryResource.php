@@ -17,7 +17,7 @@ class RiskCategoryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-exclamation';
 
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationGroup = 'WEATHER RULE MANAGEMENT';
 
     public static function form(Form $form): Form
     {
