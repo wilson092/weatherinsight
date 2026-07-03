@@ -5,6 +5,7 @@ namespace App\Services\Weather;
 use App\Models\RiskCategory;
 use App\Models\WeatherHistory;
 use App\Models\WeatherRule;
+use Illuminate\Support\Facades\Log;
 
 class WeatherRuleEngineService
 {
@@ -47,7 +48,17 @@ class WeatherRuleEngineService
 
         foreach ($rules as $rule) {
             $value = $weather->{$rule->rule_type};
-            if ($this->isRuleMet($value, $rule)) {
+            $matched = $this->isRuleMet($value, $rule);
+
+            Log::info([
+                'rule' => $rule->name,
+                'operator' => $rule->operator,
+                'threshold' => $rule->threshold_value,
+                'actual' => $value,
+                'matched' => $matched,
+            ]);
+
+            if ($matched) {
                 $score += $rule->score_weight;
                 $triggeredRules[] = $rule;
             }
@@ -68,8 +79,12 @@ class WeatherRuleEngineService
         switch ($rule->operator) {
             case '>':
                 return $value > $rule->threshold_value;
+            case '>=':
+                return $value >= $rule->threshold_value;
             case '<':
                 return $value < $rule->threshold_value;
+            case '<=':
+                return $value <= $rule->threshold_value;
             case '=':
                 return $value == $rule->threshold_value;
             case 'between':
