@@ -1,5 +1,35 @@
 @props(['latest'])
 
+<style>
+    .weather-map-popup .leaflet-popup-content-wrapper {
+        background: #162233;
+        color: #f8fafc;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 12px;
+    }
+    .weather-map-popup .leaflet-popup-content {
+        margin: 1rem;
+        color: #f8fafc;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    .weather-map-popup .leaflet-popup-tip {
+        background: #162233;
+    }
+    .weather-map-popup .leaflet-container a {
+        color: #4fd1ff;
+    }
+    .weather-map-popup strong {
+        font-weight: 900;
+        font-size: 1.125rem;
+        color: #fff;
+    }
+    .weather-map-popup span {
+        display: block;
+        margin-top: 0.25rem;
+    }
+</style>
+
 @php
     $hasLocation = $latest?->latitude !== null && $latest?->longitude !== null;
     $mapId = 'weather-map-'.($latest?->id ?? 'empty');
@@ -15,7 +45,7 @@
     }
 
     $locationRows = [
-        ['label' => 'City', 'value' => $latest?->city ?? 'Unavailable', 'icon' => 'heroicon-o-building-office-2', 'tone' => 'text-cyan-300'],
+        ['label' => 'City', 'value' => $latest?->city ? \Illuminate\Support\Str::title($latest->city) : 'Unavailable', 'icon' => 'heroicon-o-building-office-2', 'tone' => 'text-cyan-300'],
         ['label' => 'Country', 'value' => $latest?->country ?? 'Unavailable', 'icon' => 'heroicon-o-flag', 'tone' => 'text-sky-300'],
         ['label' => 'Latitude', 'value' => $latest?->latitude !== null ? number_format($latest->latitude, 4) : 'Unavailable', 'icon' => 'heroicon-o-map-pin', 'tone' => 'text-teal-300'],
         ['label' => 'Longitude', 'value' => $latest?->longitude !== null ? number_format($latest->longitude, 4) : 'Unavailable', 'icon' => 'heroicon-o-globe-alt', 'tone' => 'text-blue-300'],
@@ -40,11 +70,11 @@
                         class="h-full w-full"
                         data-latitude="{{ (float) $latest->latitude }}"
                         data-longitude="{{ (float) $latest->longitude }}"
-                        data-city="{{ $latest->city }}"
+                        data-city="{{ $latest?->city ? \Illuminate\Support\Str::title($latest->city) : 'Unavailable' }}"
                         data-temperature="{{ number_format($latest->temperature, 1) }} °C"
                         data-condition="{{ $latest->weather_description ?? $latest->weather_main ?? 'Unavailable' }}"
                         data-humidity="{{ number_format($latest->humidity, 0) }} %"
-                        data-wind-speed="{{ number_format($latest->wind_speed * 3.6, 0) }} km/h"
+                        data-wind-speed="{{ number_format($latest->wind_speed, 1) }} m/s"
                     ></div>
                     <div data-map-status-for="{{ $mapId }}" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-slate-950/35 text-sm font-semibold text-slate-400">
                         Loading map...
@@ -238,7 +268,7 @@
                 console.log('Weather map tile layer created:', tileLayer);
 
                 const popupContent = `
-                    <div class="weather-map-popup">
+                    <div>
                         <strong>${escapeHtml(weatherLocation.city)}</strong>
                         <span>${escapeHtml(weatherLocation.temperature)}</span>
                         <span>${escapeHtml(weatherLocation.condition)}</span>
@@ -249,7 +279,9 @@
 
                 const marker = window.L.marker([weatherLocation.latitude, weatherLocation.longitude])
                     .addTo(map)
-                    .bindPopup(popupContent)
+                    .bindPopup(popupContent, {
+                        className: 'weather-map-popup'
+                    })
                     .openPopup();
 
                 console.log('Weather map marker created:', marker);
