@@ -5,7 +5,9 @@
     $hasAlerts = $triggeredRules->isNotEmpty() || count($alerts) > 0;
     $recommendation = trim($riskAnalysis['recommendation'] ?? $latest?->recommendation ?? 'Monitor weather conditions and stay informed of any changes.');
     $insight = $riskAnalysis['insight'] ?? $latest?->insight ?? 'Current conditions are within normal parameters.';
-    $riskLevel = $riskAnalysis['risk'] ?? $latest?->risk_level ?? 'Low';
+    $riskCategory = $riskAnalysis['risk_category'] ?? $latest?->risk_category;
+    $riskLevel = $riskAnalysis['risk_level'] ?? $latest?->risk_level ?? 'low';
+    $riskName = $riskAnalysis['risk'] ?? $riskCategory?->name ?? ucfirst($riskLevel).' Risk';
     $riskKey = match (true) {
         str_contains(strtolower($riskLevel), 'extreme') => 'Extreme',
         str_contains(strtolower($riskLevel), 'high') => 'High',
@@ -71,23 +73,19 @@
                 <h2 id="alert-center-title" class="text-base font-black text-white">Weather Alert Center</h2>
             </div>
             <span class="rounded-full border px-3 py-1 text-xs font-black uppercase {{ $riskColors[$riskKey] }}">
-                {{ $riskLevel }}
+                {{ $riskName }}
             </span>
         </div>
 
-        @if(! $hasAlerts)
-            <div class="flex flex-1 flex-col justify-center rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-slate-900/75 to-emerald-950/40 p-5">
-                <div class="flex items-start gap-3">
-                    <span class="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
-                        <x-heroicon-o-check-circle class="h-6 w-6" />
-                    </span>
-                    <div>
-                        <h3 class="text-lg font-black text-emerald-200">No Active Weather Alerts</h3>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">
-                            All monitored weather parameters are within configured thresholds.
-                        </p>
-                    </div>
+        @if(!$hasAlerts)
+            <div class="flex flex-1 flex-col justify-center text-center">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-2 border-emerald-400/30 bg-emerald-500/10 text-emerald-300">
+                    <x-heroicon-o-check-circle class="h-7 w-7" />
                 </div>
+                <h3 class="mt-4 text-lg font-black text-emerald-200">No Active Weather Alerts</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-300">
+                    All monitored weather parameters are within configured thresholds.
+                </p>
                 <div class="mt-5 rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3">
                     <p class="text-xs font-bold uppercase text-slate-500">Last Updated</p>
                     <p class="mt-1 text-sm font-black text-white">{{ $updatedAt->format('d M Y, H:i') }}</p>
@@ -201,7 +199,7 @@
                 <span class="text-xs font-bold uppercase text-slate-500">Current Risk</span>
                 <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase {{ $riskColors[$riskKey] }}">
                     <x-heroicon-o-shield-exclamation class="h-3.5 w-3.5" />
-                    {{ $riskLevel }}
+                    {{ $riskName }}
                 </span>
             </div>
         </div>

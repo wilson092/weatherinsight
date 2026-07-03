@@ -12,10 +12,23 @@ class RiskCategory extends Model
     protected $fillable = [
         'name',
         'risk_level',
-        'min_temperature',
-        'max_temperature',
+        'min_score',
+        'max_score',
         'color_badge',
-        'description',
+        'recommendation',
+        'insight',
         'is_active',
     ];
+
+    public static function forScore(int $score): ?self
+    {
+        return static::where('min_score', '<=', $score)
+            ->where(function ($query) use ($score) {
+                $query->where('max_score', '>=', $score)
+                    ->orWhereNull('max_score');
+            })
+            ->where('is_active', true)
+            ->orderBy('min_score')
+            ->first();
+    }
 }

@@ -16,32 +16,32 @@ class RiskCategorySeeder extends Seeder
             'name' => 'Low Risk',
             'risk_level' => 'low',
             'min_score' => 0,
-            'max_score' => 10,
+            'max_score' => 20,
             'color_badge' => 'success',
-            'recommendation' => 'Aktivitas di luar ruangan aman untuk dilakukan.',
-            'insight' => 'Kondisi cuaca ideal dengan risiko minimal.',
+            'recommendation' => 'Aktivitas di luar ruangan aman dilakukan.',
+            'insight' => 'Parameter cuaca saat ini berada dalam kondisi stabil dengan tingkat risiko yang rendah. Kondisi ini mendukung aktivitas luar ruangan tanpa memerlukan tindakan pencegahan khusus.',
             'is_active' => true,
         ]);
 
         RiskCategory::create([
             'name' => 'Medium Risk',
             'risk_level' => 'medium',
-            'min_score' => 11,
-            'max_score' => 25,
+            'min_score' => 21,
+            'max_score' => 30,
             'color_badge' => 'warning',
-            'recommendation' => 'Disarankan untuk waspada. Pertimbangkan untuk mengurangi aktivitas di luar ruangan.',
-            'insight' => 'Beberapa kondisi cuaca dapat meningkatkan risiko. Periksa detail untuk informasi lebih lanjut.',
+            'recommendation' => 'Kondisi cuaca normal. Tetap jaga hidrasi dan sesuaikan aktivitas dengan kondisi lingkungan.',
+            'insight' => 'Beberapa parameter cuaca mulai menunjukkan peningkatan tingkat risiko. Meskipun masih dalam batas yang dapat ditoleransi, pengguna disarankan untuk tetap memperhatikan perubahan kondisi cuaca.',
             'is_active' => true,
         ]);
 
         RiskCategory::create([
             'name' => 'High Risk',
             'risk_level' => 'high',
-            'min_score' => 26,
+            'min_score' => 31,
             'max_score' => null,
             'color_badge' => 'danger',
-            'recommendation' => 'Hindari aktivitas di luar ruangan jika tidak perlu. Ambil tindakan pencegahan ekstra.',
-            'insight' => 'Kondisi cuaca saat ini berpotensi berbahaya. Prioritaskan keselamatan.',
+            'recommendation' => 'Batasi aktivitas di luar ruangan pada siang hari. Gunakan pelindung dari paparan panas dan perbanyak konsumsi air.',
+            'insight' => 'Suhu tinggi berpotensi menyebabkan heat stress dan dehidrasi terutama pada aktivitas luar ruangan.',
             'is_active' => true,
         ]);
     }

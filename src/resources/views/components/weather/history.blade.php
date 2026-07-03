@@ -21,6 +21,11 @@
             </thead>
             <tbody class="divide-y divide-white/[.06]">
                 @forelse($history as $item)
+                    @php
+                        $itemRiskLevel = $item->risk_level ?? 'low';
+                        $itemRiskCategory = $item->risk_category;
+                        $itemRiskName = $itemRiskCategory?->name ?? ucfirst($itemRiskLevel).' Risk';
+                    @endphp
                     <tr class="transition hover:bg-white/[.035]">
                         <td class="px-4 py-4 text-sm font-semibold text-white">{{ $item->recorded_at?->format('d M, H:i') }}</td>
                         <td class="px-4 py-4 text-sm text-slate-300">{{ number_format($item->temperature, 1) }} °C</td>
@@ -29,9 +34,12 @@
                         <td class="px-4 py-4 text-sm text-slate-300">{{ number_format($item->wind_speed, 1) }} m/s</td>
                         <td class="px-4 py-4 text-sm font-black text-white">{{ $item->risk_score }}/100</td>
                         <td class="px-4 py-4">
-                            <span class="rounded-full border px-3 py-1 text-[10px] font-black tracking-widest {{ $item->risk_level === 'HIGH' ? 'border-rose-400/20 bg-rose-500/10 text-rose-300' : ($item->risk_level === 'MEDIUM' ? 'border-amber-400/20 bg-amber-500/10 text-amber-300' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300') }}">
-                                {{ $item->risk_level }}
-                            </span>
+                            <div>
+                                <p class="text-sm font-black text-white">{{ $itemRiskName }}</p>
+                                <span class="inline-flex mt-1 rounded-full border px-3 py-1 text-[10px] font-black tracking-widest {{ $itemRiskLevel === 'high' ? 'border-rose-400/20 bg-rose-500/10 text-rose-300' : ($itemRiskLevel === 'medium' ? 'border-amber-400/20 bg-amber-500/10 text-amber-300' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300') }}">
+                                    {{ strtoupper($itemRiskLevel) }}
+                                </span>
+                            </div>
                         </td>
                     </tr>
                 @empty

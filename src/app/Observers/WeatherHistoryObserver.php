@@ -3,19 +3,21 @@
 namespace App\Observers;
 
 use App\Models\WeatherHistory;
-use App\Services\Weather\WeatherRiskAnalysisService;
+use App\Services\Weather\WeatherRuleEngineService;
 
 class WeatherHistoryObserver
 {
     public function __construct(
-        private readonly WeatherRiskAnalysisService $riskAnalysis,
+        private readonly WeatherRuleEngineService $ruleEngine,
     ) {}
 
     public function saving(WeatherHistory $weather): void
     {
-        $analysis = $this->riskAnalysis->analyze($weather);
+        $analysis = $this->ruleEngine->analyze($weather);
 
         $weather->risk_score = $analysis['score'];
-        $weather->risk_level = $analysis['level'];
+        $weather->risk_level = $analysis['risk_level'];
+        $weather->recommendation = $analysis['recommendation'];
+        $weather->insight = $analysis['insight'];
     }
 }

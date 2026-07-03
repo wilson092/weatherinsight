@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\RiskCategory;
 use Illuminate\Database\Eloquent\Model;
 
 class WeatherHistory extends Model
@@ -55,5 +56,14 @@ class WeatherHistory extends Model
             'recommendation' => $this->recommendation,
             'insight' => $this->insight,
         ];
+    }
+
+    public function getRiskCategoryAttribute(): ?RiskCategory
+    {
+        if (! isset($this->risk_score)) {
+            return null;
+        }
+
+        return RiskCategory::forScore((int) $this->risk_score);
     }
 }

@@ -232,8 +232,8 @@
                         $humidityDiff = $comparisonWeather->humidity - $primaryWeather->humidity;
                         $windDiff = $comparisonWeather->wind_speed - $primaryWeather->wind_speed;
                         $riskRank = ['Low' => 1, 'Medium' => 2, 'High' => 3, 'Extreme' => 4];
-                        $primaryRisk = $primaryAnalysis['risk'] ?? $primaryWeather->risk_level ?? 'Low';
-                        $comparisonRisk = $comparisonAnalysis['risk'] ?? $comparisonWeather->risk_level ?? 'Low';
+                        $primaryRisk = $primaryAnalysis['risk'] ?? $primaryWeather->risk_category?->name ?? ucfirst($primaryWeather->risk_level ?? 'low').' Risk';
+                        $comparisonRisk = $comparisonAnalysis['risk'] ?? $comparisonWeather->risk_category?->name ?? ucfirst($comparisonWeather->risk_level ?? 'low').' Risk';
                         $riskKey = fn ($risk) => match (true) {
                             str_contains(strtolower($risk), 'extreme') => 'Extreme',
                             str_contains(strtolower($risk), 'high') => 'High',

@@ -240,11 +240,17 @@
                                             'medium' => 'bg-amber-400/10 text-amber-300',
                                             'high' => 'bg-rose-400/10 text-rose-300',
                                         ];
-                                        $riskColor = $riskColors[$record->risk_level] ?? 'bg-slate-400/10 text-slate-300';
+                                        $riskLevel = $record->risk_level ?? 'low';
+                                        $riskCategory = $record->risk_category;
+                                        $riskLabel = $riskCategory?->name ?? ucfirst($riskLevel).' Risk';
+                                        $riskColor = $riskColors[$riskLevel] ?? 'bg-slate-400/10 text-slate-300';
                                     @endphp
-                                    <span class="inline-flex rounded-full px-2 py-1 text-xs font-bold uppercase {{ $riskColor }}">
-                                        {{ $record->risk_level }}
-                                    </span>
+                                    <div>
+                                        <p class="text-sm font-black text-white">{{ $riskLabel }}</p>
+                                        <span class="inline-flex mt-1 rounded-full px-2 py-1 text-xs font-bold uppercase {{ $riskColor }}">
+                                            {{ strtoupper($riskLevel) }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-4 sm:px-6">
                                     <div class="flex items-center gap-2">

@@ -2,39 +2,31 @@
 
 namespace App\Services\Weather;
 
+use App\Models\RiskCategory;
 use App\Models\WeatherHistory;
 
 class WeatherRiskAnalysisService
 {
+    public function __construct(
+        private readonly WeatherRuleEngineService $ruleEngine,
+    ) {}
+
     public function analyze(WeatherHistory|array $weather): array
     {
-        $points = (int) config('weather-risk.points_per_condition', 25);
-        $thresholds = config('weather-risk.thresholds');
-
-        $conditions = [
-            'temperature' => $this->value($weather, 'temperature') > $thresholds['temperature'],
-            'humidity' => $this->value($weather, 'humidity') > $thresholds['humidity'],
-            'wind_speed' => $this->value($weather, 'wind_speed') > $thresholds['wind_speed'],
-            'pressure' => $this->value($weather, 'pressure') < $thresholds['pressure_min']
-                || $this->value($weather, 'pressure') > $thresholds['pressure_max'],
-        ];
-
-        $score = collect($conditions)->filter()->count() * $points;
+        $weatherModel = $weather instanceof WeatherHistory ? $weather : new WeatherHistory($weather);
+        $analysis = $this->ruleEngine->analyze($weatherModel);
 
         return [
-            'score' => $score,
-            'level' => $this->level($score),
-            'conditions' => $conditions,
+            'score' => $analysis['score'],
+            'level' => strtoupper($analysis['risk_level'] ?? 'LOW'),
+            'risk' => $analysis['risk'] ?? ($analysis['risk_category']->name ?? 'N/A'),
+            'conditions' => [],
         ];
     }
 
     public function level(int $score): string
     {
-        return match (true) {
-            $score <= 30 => 'LOW',
-            $score <= 70 => 'MEDIUM',
-            default => 'HIGH',
-        };
+        return strtoupper(RiskCategory::forScore($score)?->risk_level ?? 'LOW');
     }
 
     private function value(WeatherHistory|array $weather, string $key): float

@@ -2,7 +2,9 @@
 
 @php
     $score = (int) ($analysis['score'] ?? $latest?->risk_score ?? 0);
-    $riskLevel = $analysis['risk'] ?? $latest?->risk_level ?? 'Low';
+    $riskCategory = $analysis['risk_category'] ?? $latest?->risk_category;
+    $riskLevel = $analysis['risk_level'] ?? $latest?->risk_level ?? 'low';
+    $riskName = $analysis['risk'] ?? $riskCategory?->name ?? ucfirst($riskLevel).' Risk';
     $riskKey = match (true) {
         str_contains(strtolower($riskLevel), 'extreme') => 'Extreme',
         str_contains(strtolower($riskLevel), 'high') => 'High',

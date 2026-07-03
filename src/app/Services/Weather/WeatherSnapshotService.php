@@ -64,7 +64,7 @@ class WeatherSnapshotService
 
         $weather->update([
             'risk_score' => $analysis['score'],
-            'risk_level' => $analysis['risk'],
+            'risk_level' => $analysis['risk_level'],
             'recommendation' => $analysis['recommendation'],
             'insight' => $analysis['insight'],
         ]);

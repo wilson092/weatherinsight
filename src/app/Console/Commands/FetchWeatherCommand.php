@@ -82,7 +82,7 @@ class FetchWeatherCommand extends Command
         $weather->update([
             'recommendation' => $analysis['recommendation'],
             'insight' => $analysis['insight'],
-            'risk_level' => $analysis['risk'],
+            'risk_level' => $analysis['risk_level'],
         ]);
 
         $this->info("Weather fetched for {$city}");

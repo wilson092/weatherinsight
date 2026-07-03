@@ -58,11 +58,13 @@
             <tbody class="divide-y divide-white/5">
                 @forelse($rankedCities as $rank => $weather)
                     @php
-                        $risk = $weather->risk_level ?? 'Low';
+                        $riskLevel = $weather->risk_level ?? 'low';
+                        $riskCategory = $weather->risk_category;
+                        $riskName = $riskCategory?->name ?? ucfirst($riskLevel).' Risk';
                         $riskKey = match (true) {
-                            str_contains(strtolower($risk), 'extreme') => 'Extreme',
-                            str_contains(strtolower($risk), 'high') => 'High',
-                            str_contains(strtolower($risk), 'medium') => 'Medium',
+                            str_contains(strtolower($riskLevel), 'extreme') => 'Extreme',
+                            str_contains(strtolower($riskLevel), 'high') => 'High',
+                            str_contains(strtolower($riskLevel), 'medium') => 'Medium',
                             default => 'Low',
                         };
                     @endphp
@@ -88,7 +90,7 @@
                         <td class="px-6 py-5 text-right text-lg font-black text-white">{{ number_format($weather->wind_speed, 1) }} m/s</td>
                         <td class="px-6 py-5 text-center">
                             <span class="inline-flex rounded-full border px-3 py-1 text-xs font-black uppercase {{ $riskColors[$riskKey] }}">
-                                {{ $risk }}
+                                {{ $riskName }}
                             </span>
                         </td>
                     </tr>
