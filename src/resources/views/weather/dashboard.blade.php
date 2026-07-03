@@ -24,26 +24,28 @@
 
     <style>
         html {
-            background-color: #06111f;
+            background-color: #020817;
         }
 
         body.weather-dashboard {
-            background-color: #06111f;
+            background-color: #020817;
             background-image:
-                linear-gradient(rgba(148, 163, 184, .035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, .035) 1px, transparent 1px),
-                radial-gradient(circle at 10% 10%, rgba(14, 165, 233, .18), transparent 28rem),
-                radial-gradient(circle at 90% 20%, rgba(45, 212, 191, .14), transparent 30rem),
-                linear-gradient(145deg, #06111f 0%, #0b1f35 48%, #071426 100%);
-            background-size: 42px 42px, 42px 42px, auto, auto, auto;
+                linear-gradient(rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(150deg, #020817 0%, #071426 46%, #042f3f 100%);
+            background-size: 48px 48px, 48px 48px, auto;
             color: #e2e8f0;
         }
 
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .045));
-            border: 1px solid rgba(255, 255, 255, .13);
-            box-shadow: 0 24px 70px rgba(2, 8, 23, .28);
-            backdrop-filter: blur(20px);
+            background: linear-gradient(145deg, rgba(15, 23, 42, .84), rgba(15, 23, 42, .54));
+            border: 1px solid rgba(255, 255, 255, .10);
+            box-shadow: 0 22px 60px rgba(2, 8, 23, .34);
+            backdrop-filter: blur(18px);
+        }
+
+        [x-cloak] {
+            display: none !important;
         }
 
         .leaflet-container {
@@ -208,74 +210,93 @@
 
     </style>
 </head>
-<body class="weather-dashboard min-h-screen text-slate-100 antialiased" x-data="{ mobileMenuOpen: false }">
+<body
+    class="weather-dashboard min-h-screen text-slate-100 antialiased"
+    x-data="{
+        mobileMenuOpen: false,
+        locating: false,
+        detectLocation() {
+            if (!navigator.geolocation || this.locating) return;
+            this.locating = true;
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    const { latitude, longitude } = position.coords;
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+                    const payload = await response.json();
+                    const address = payload.address || {};
+                    const city = address.city || address.town || address.municipality || address.county || address.state;
+                    if (city) {
+                        const input = document.querySelector('[data-primary-city-input]');
+                        input.value = city;
+                        input.form.submit();
+                    }
+                } finally {
+                    this.locating = false;
+                }
+            }, () => {
+                this.locating = false;
+            });
+        }
+    }"
+>
     <!-- Modern Navbar -->
-    <nav class="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
-            <div class="glass-panel flex h-16 items-center justify-between gap-4 rounded-full px-4 sm:h-[70px] sm:px-6 lg:gap-8 lg:px-8">
-                
-                <!-- Logo Section -->
-                <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-teal-400 shadow-lg shadow-cyan-950/40 sm:h-11 sm:w-11">
-                        <x-heroicon-o-cloud class="h-6 w-6 text-slate-950 sm:h-7 sm:w-7" />
-                    </div>
-                    <div class="hidden sm:block">
-                        <h1 class="text-lg font-black tracking-tight text-white lg:text-xl">WeatherInsight</h1>
-                    </div>
+    <nav class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+        <div class="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <a href="/" class="flex min-w-0 items-center gap-3">
+                <div class="flex h-9 w-9 flex-none items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/40">
+                    <x-heroicon-o-cloud class="h-5 w-5" />
                 </div>
+                <span class="truncate text-lg font-black text-white">WeatherInsight</span>
+            </a>
 
-                <!-- Desktop Navigation Menu -->
-                <div class="hidden items-center gap-1 lg:flex">
-                    <a href="/" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
-                        <span>Dashboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/comparison" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Comparison</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/leaderboard" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Leaderboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/history" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>History</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                </div>
+            <div class="hidden h-full items-center gap-7 lg:flex">
+                <a href="/" class="relative flex h-full items-center text-sm font-bold text-white">
+                    Dashboard
+                    <span class="absolute bottom-0 left-0 h-0.5 w-full bg-cyan-400"></span>
+                </a>
+                <a href="/comparison" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Comparison</a>
+                <a href="/leaderboard" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Leaderboard</a>
+                <a href="/history" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">History</a>
+            </div>
 
-                <!-- Right Section: Search & User -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <!-- Search Input (Hidden on mobile, shown on tablet+) -->
-                    <div class="relative hidden md:block">
-                        <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search city..."
-                            class="w-40 rounded-full border border-white/10 bg-slate-950/40 py-2 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 transition-all focus:w-56 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 lg:w-48"
-                        >
-                    </div>
-
-                    <!-- User Info (Hidden on mobile) -->
-                    <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-3 py-2 sm:flex lg:px-4">
-                        <x-heroicon-o-user-circle class="h-5 w-5 text-cyan-300" />
-                        <span class="text-sm font-semibold text-white">{{ auth()->user()->name }}</span>
-                    </div>
-
-                    <!-- Logout Button (Hidden on mobile) -->
-                    <form method="POST" action="/logout" class="hidden sm:block">
-                        @csrf
-                        <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
-                            <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
-                        </button>
-                    </form>
-
-                    <!-- Mobile Menu Button -->
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/25 text-white transition hover:bg-slate-950/40 lg:hidden">
-                        <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
-                        <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+            <div class="flex items-center gap-2 sm:gap-3">
+                <form method="GET" action="/" class="relative hidden md:block">
+                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                        type="text"
+                        name="city"
+                        value="{{ request('city', 'Jakarta') }}"
+                        placeholder="Search city..."
+                        class="h-10 w-48 rounded-full border border-white/10 bg-slate-900/70 pl-10 pr-10 text-sm text-white placeholder:text-slate-500 transition focus:w-64 focus:border-cyan-400 focus:ring-cyan-400"
+                    >
+                    <button type="submit" class="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-cyan-400 hover:text-slate-950" title="Search">
+                        <x-heroicon-o-magnifying-glass class="h-4 w-4" />
                     </button>
+                </form>
+
+                <button type="button" class="relative hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-slate-300 transition hover:border-cyan-400 hover:text-cyan-300 sm:flex" title="Notifications">
+                    <x-heroicon-o-bell class="h-5 w-5" />
+                    <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-400"></span>
+                </button>
+
+                <div class="hidden items-center gap-2 sm:flex">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-sm font-bold text-slate-300">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    </div>
+                    <span class="hidden max-w-24 truncate text-sm font-bold text-white xl:block">{{ auth()->user()->name }}</span>
                 </div>
+
+                <form method="POST" action="/logout" class="hidden sm:block">
+                    @csrf
+                    <button type="submit" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-slate-300 transition hover:border-rose-400/50 hover:text-rose-300" title="Logout">
+                        <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
+                    </button>
+                </form>
+
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-white transition hover:border-cyan-400 lg:hidden" title="Menu">
+                    <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
+                    <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+                </button>
             </div>
         </div>
     </nav>
@@ -290,18 +311,20 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-1"
-         class="fixed inset-x-0 top-20 z-40 px-4 sm:top-[88px] sm:px-6 lg:hidden">
+         class="fixed inset-x-0 top-20 z-40 px-4 sm:px-6 lg:hidden">
         <div class="glass-panel mx-auto max-w-7xl overflow-hidden rounded-3xl">
             <div class="flex flex-col p-4">
                 <!-- Mobile Search -->
-                <div class="relative mb-4 md:hidden">
+                <form method="GET" action="/" class="relative mb-4 md:hidden">
                     <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
+                        name="city"
+                        value="{{ request('city', 'Jakarta') }}"
                         placeholder="Search city..."
                         class="w-full rounded-full border border-white/10 bg-slate-950/40 py-2 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
                     >
-                </div>
+                </form>
 
                 <!-- Mobile User Info -->
                 <div class="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:hidden">
@@ -340,53 +363,62 @@
         </div>
     </div>
 
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <!-- Last Update Info -->
-        <div class="mb-6 flex items-center justify-end">
-            <div class="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-4 py-2 backdrop-blur-sm">
-                <x-heroicon-o-clock class="h-4 w-4 text-teal-300" />
-                <span class="text-xs font-medium text-slate-400">Last update:</span>
-                <span class="text-xs font-semibold text-white">{{ $latest?->recorded_at?->format('d M Y, H:i') ?? 'Unavailable' }}</span>
-            </div>
-        </div>
-
-        <form method="GET" action="/" class="glass-panel mb-8 rounded-3xl p-3 sm:p-4">
+    <div class="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8">
+        <form method="GET" action="/" class="glass-panel mb-4 rounded-3xl p-2.5">
             @if(request('compare_city'))
                 <input type="hidden" name="compare_city" value="{{ request('compare_city') }}">
             @endif
-            <div class="flex flex-col gap-3 sm:flex-row">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <label class="relative flex-1">
                     <span class="sr-only">Search primary city</span>
-                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
                         name="city"
+                        data-primary-city-input
                         value="{{ request('city', 'Jakarta') }}"
-                        placeholder="Search a monitored city"
-                        class="w-full rounded-2xl border border-white/10 bg-slate-950/40 py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
+                        placeholder="Search city..."
+                        class="h-12 w-full rounded-2xl border border-transparent bg-slate-950/40 pl-13 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
                     >
                 </label>
-                <button type="submit" class="rounded-2xl bg-gradient-to-r from-cyan-400 to-teal-400 px-7 py-3.5 font-bold text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:brightness-110">
-                    Update Intelligence
+                <button type="button" @click="detectLocation()" class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-cyan-300 transition hover:bg-cyan-400/10 hover:text-cyan-200">
+                    <x-heroicon-o-map-pin class="h-5 w-5" />
+                    <span x-text="locating ? 'Detecting...' : 'Detect My Location'"></span>
+                </button>
+                <button type="submit" class="inline-flex h-12 items-center justify-center rounded-2xl bg-cyan-400 px-6 text-sm font-black text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-300">
+                    Search
                 </button>
             </div>
         </form>
 
-        <main class="space-y-8">
+        <div class="mb-4 flex items-center justify-end">
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/40 px-3 py-1.5 text-xs text-slate-400">
+                <x-heroicon-o-clock class="h-4 w-4 text-cyan-300" />
+                <span>Last update:</span>
+                <strong class="font-semibold text-white">{{ $latest?->recorded_at?->format('d M Y, H:i') ?? 'Unavailable' }}</strong>
+            </div>
+        </div>
+
+        <main class="space-y-5">
             <!-- Hero Section: Current Weather + Hourly Forecast -->
-            <div class="grid gap-6 lg:grid-cols-[40%_60%] md:grid-cols-2">
+            <div class="grid gap-5 xl:grid-cols-[1.02fr_1fr]">
                 <x-weather.current-weather :latest="$latest" />
                 <x-weather.hourly-forecast :forecast="$forecast" />
             </div>
 
-            <x-weather.risk-analysis :latest="$latest" :analysis="$riskAnalysis" />
-            <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" />
-            <x-weather.forecast :forecast="$forecast" />
-            <x-weather.map :latest="$latest" />
+            <div class="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
+                <x-weather.forecast :forecast="$forecast" />
+                <x-weather.risk-analysis :latest="$latest" :analysis="$riskAnalysis" />
+            </div>
+
+            <div class="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
+                <x-weather.map :latest="$latest" />
+                <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" />
+            </div>
         </main>
 
-        <footer class="py-10 text-center text-xs font-semibold uppercase tracking-[0.25em] text-slate-600">
-            Weather Intelligence Monitoring System
+        <footer class="py-8 text-center text-sm text-slate-500">
+            &copy; {{ now()->year }} WeatherInsight. All rights reserved.
         </footer>
     </div>
 </body>

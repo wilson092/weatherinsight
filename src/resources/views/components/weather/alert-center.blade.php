@@ -157,4 +157,8 @@
             </div>
         </div>
     </div>
+<<<<<<< ours
 </section>
+=======
+</section>
+>>>>>>> theirs
