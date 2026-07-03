@@ -32,7 +32,13 @@ Route::post('/logout', [AuthController::class, 'logout'])
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/', WeatherDashboardController::class);
+    Route::get('/', [WeatherDashboardController::class, 'index'])->name('dashboard');
+    
+    Route::get('/comparison', [WeatherDashboardController::class, 'comparison'])->name('comparison');
+    
+    Route::get('/leaderboard', [WeatherDashboardController::class, 'leaderboard'])->name('leaderboard');
+    
+    Route::get('/history', [WeatherDashboardController::class, 'history'])->name('history');
 
 });
 

@@ -5,7 +5,7 @@
     $comparisonError = data_get($comparison, 'error');
 @endphp
 
-<section aria-labelledby="comparison-title" class="glass-panel rounded-3xl p-6 sm:p-8">
+<section id="comparison" aria-labelledby="comparison-title" class="glass-panel rounded-3xl p-6 sm:p-8">
     <div class="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
             <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">Side-by-side Intelligence</p>

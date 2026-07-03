@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 class WeatherDashboardController extends Controller
 {
-    public function __invoke(
+    public function index(
         Request $request,
         OpenWeatherService $service,
         WeatherRuleEngineService $ruleEngine,
@@ -84,10 +84,6 @@ class WeatherDashboardController extends Controller
         // WEATHER INTELLIGENCE LAYER
         $riskAnalysis = $latest ? $ruleEngine->analyze($latest) : null;
         $alerts = $latest ? $alertService->forWeather($latest) : [];
-        $comparison = $comparisonService->findOrFetch(
-            $request->get('compare_city'),
-            auth()->id(),
-        );
         $leaderboards = $leaderboardService->rankings();
 
         return view('weather.dashboard', [
@@ -97,8 +93,65 @@ class WeatherDashboardController extends Controller
             'city' => $city,
             'riskAnalysis' => $riskAnalysis,
             'alerts' => $alerts,
-            'comparison' => $comparison,
             'leaderboards' => $leaderboards,
         ]);
+    }
+
+    public function comparison(Request $request)
+    {
+        $comparisonService = app(WeatherComparisonService::class);
+        $ruleEngine = app(WeatherRuleEngineService::class);
+
+        // Primary city
+        $primaryCity = $request->get('primary_city', 'Jakarta');
+        $primaryWeather = WeatherHistory::where('city', $primaryCity)
+            ->latest()
+            ->first();
+        
+        // Primary city risk analysis
+        $primaryAnalysis = $primaryWeather ? $ruleEngine->analyze($primaryWeather) : null;
+
+        // Comparison city
+        $comparisonCity = $request->get('comparison_city');
+        $comparisonData = $comparisonCity
+            ? $comparisonService->findOrFetch($comparisonCity, auth()->id())
+            : null;
+        
+        $comparisonWeather = $comparisonData ? data_get($comparisonData, 'weather') : null;
+        $comparisonAnalysis = $comparisonWeather ? $ruleEngine->analyze($comparisonWeather) : null;
+
+        return view('weather.comparison', [
+            'primaryCity' => $primaryCity,
+            'primaryWeather' => $primaryWeather,
+            'primaryAnalysis' => $primaryAnalysis,
+            'comparisonCity' => $comparisonCity,
+            'comparisonWeather' => $comparisonWeather,
+            'comparisonAnalysis' => $comparisonAnalysis,
+            'comparisonError' => data_get($comparisonData, 'error'),
+        ]);
+    }
+
+    public function leaderboard(WeatherLeaderboardService $leaderboardService)
+    {
+        $leaderboards = $leaderboardService->rankings();
+
+        return view('weather.leaderboard', compact('leaderboards'));
+    }
+
+    public function history(Request $request)
+    {
+        $city = $request->get('city', 'Jakarta');
+        $date = $request->get('date');
+
+        $query = WeatherHistory::where('city', $city)
+            ->orderBy('recorded_at', 'desc');
+
+        if ($date) {
+            $query->whereDate('recorded_at', $date);
+        }
+
+        $history = $query->paginate(20);
+
+        return view('weather.history', compact('history', 'city'));
     }
 }

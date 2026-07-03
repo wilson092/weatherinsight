@@ -1,6 +1,6 @@
 @props(['history'])
 
-<section aria-labelledby="history-title" class="glass-panel rounded-3xl p-6 sm:p-8">
+<section id="history" aria-labelledby="history-title" class="glass-panel rounded-3xl p-6 sm:p-8">
     <div class="mb-6">
         <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">Recorded Observations</p>
         <h2 id="history-title" class="mt-2 text-2xl font-black text-white sm:text-3xl">Weather History</h2>

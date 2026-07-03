@@ -9,7 +9,7 @@
     ];
 @endphp
 
-<section aria-labelledby="leaderboard-title" class="glass-panel rounded-3xl p-6 sm:p-8">
+<section id="leaderboard" aria-labelledby="leaderboard-title" class="glass-panel rounded-3xl p-6 sm:p-8">
     <div class="mb-6 flex items-center justify-between gap-4">
         <div>
             <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">Latest City Snapshots</p>

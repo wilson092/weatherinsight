@@ -8,6 +8,7 @@
 
     <link
         rel="stylesheet"
+
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossorigin=""
@@ -207,44 +208,147 @@
 
     </style>
 </head>
-<body class="weather-dashboard min-h-screen text-slate-100 antialiased">
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-        <header class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-teal-400 shadow-lg shadow-cyan-950/40">
-                    <x-heroicon-o-cloud class="h-8 w-8 text-slate-950" />
+<body class="weather-dashboard min-h-screen text-slate-100 antialiased" x-data="{ mobileMenuOpen: false }">
+    <!-- Modern Navbar -->
+    <nav class="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl">
+            <div class="glass-panel flex h-16 items-center justify-between gap-4 rounded-full px-4 sm:h-[70px] sm:px-6 lg:gap-8 lg:px-8">
+                
+                <!-- Logo Section -->
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-teal-400 shadow-lg shadow-cyan-950/40 sm:h-11 sm:w-11">
+                        <x-heroicon-o-cloud class="h-6 w-6 text-slate-950 sm:h-7 sm:w-7" />
+                    </div>
+                    <div class="hidden sm:block">
+                        <h1 class="text-lg font-black tracking-tight text-white lg:text-xl">WeatherInsight</h1>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Monitoring Console</p>
-                    <h1 class="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">WeatherInsight</h1>
+
+                <!-- Desktop Navigation Menu -->
+                <div class="hidden items-center gap-1 lg:flex">
+                    <a href="/" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
+                        <span>Dashboard</span>
+                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="/comparison" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
+                        <span>Comparison</span>
+                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="/leaderboard" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
+                        <span>Leaderboard</span>
+                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="/history" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
+                        <span>History</span>
+                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                    </a>
+                </div>
+
+                <!-- Right Section: Search & User -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <!-- Search Input (Hidden on mobile, shown on tablet+) -->
+                    <div class="relative hidden md:block">
+                        <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search city..."
+                            class="w-40 rounded-full border border-white/10 bg-slate-950/40 py-2 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 transition-all focus:w-56 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 lg:w-48"
+                        >
+                    </div>
+
+                    <!-- User Info (Hidden on mobile) -->
+                    <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-3 py-2 sm:flex lg:px-4">
+                        <x-heroicon-o-user-circle class="h-5 w-5 text-cyan-300" />
+                        <span class="text-sm font-semibold text-white">{{ auth()->user()->name }}</span>
+                    </div>
+
+                    <!-- Logout Button (Hidden on mobile) -->
+                    <form method="POST" action="/logout" class="hidden sm:block">
+                        @csrf
+                        <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
+                            <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
+                        </button>
+                    </form>
+
+                    <!-- Mobile Menu Button -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/25 text-white transition hover:bg-slate-950/40 lg:hidden">
+                        <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
+                        <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+                    </button>
                 </div>
             </div>
+        </div>
+    </nav>
 
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="glass-panel flex items-center gap-3 rounded-2xl px-4 py-3">
+    <!-- Mobile Menu -->
+    <div x-show="mobileMenuOpen" 
+         x-cloak
+         @click.away="mobileMenuOpen = false"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-1"
+         class="fixed inset-x-0 top-20 z-40 px-4 sm:top-[88px] sm:px-6 lg:hidden">
+        <div class="glass-panel mx-auto max-w-7xl overflow-hidden rounded-3xl">
+            <div class="flex flex-col p-4">
+                <!-- Mobile Search -->
+                <div class="relative mb-4 md:hidden">
+                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search city..."
+                        class="w-full rounded-full border border-white/10 bg-slate-950/40 py-2 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                    >
+                </div>
+
+                <!-- Mobile User Info -->
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:hidden">
                     <x-heroicon-o-user-circle class="h-6 w-6 text-cyan-300" />
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Analyst</p>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">User</p>
                         <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
                     </div>
                 </div>
 
-                <div class="glass-panel flex items-center gap-3 rounded-2xl px-4 py-3">
-                    <x-heroicon-o-clock class="h-6 w-6 text-teal-300" />
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Last update</p>
-                        <p class="text-sm font-semibold text-white">{{ $latest?->recorded_at?->format('d M Y, H:i') ?? 'Unavailable' }}</p>
-                    </div>
+                <!-- Mobile Navigation Links -->
+                <div class="space-y-1">
+                    <a href="/" class="block rounded-xl bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-300 transition-colors hover:bg-cyan-400/20">
+                        Dashboard
+                    </a>
+                    <a href="/comparison" @click="mobileMenuOpen = false" class="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                        Comparison
+                    </a>
+                    <a href="/leaderboard" @click="mobileMenuOpen = false" class="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                        Leaderboard
+                    </a>
+                    <a href="/history" @click="mobileMenuOpen = false" class="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                        History
+                    </a>
                 </div>
 
-                <form method="POST" action="/logout">
+                <!-- Mobile Logout -->
+                <form method="POST" action="/logout" class="mt-4 sm:hidden">
                     @csrf
-                    <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
-                        <x-heroicon-o-arrow-right-start-on-rectangle class="h-6 w-6" />
+                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300 transition hover:bg-rose-500 hover:text-white">
+                        <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
+                        <span>Logout</span>
                     </button>
                 </form>
             </div>
-        </header>
+        </div>
+    </div>
+
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <!-- Last Update Info -->
+        <div class="mb-6 flex items-center justify-end">
+            <div class="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-4 py-2 backdrop-blur-sm">
+                <x-heroicon-o-clock class="h-4 w-4 text-teal-300" />
+                <span class="text-xs font-medium text-slate-400">Last update:</span>
+                <span class="text-xs font-semibold text-white">{{ $latest?->recorded_at?->format('d M Y, H:i') ?? 'Unavailable' }}</span>
+            </div>
+        </div>
 
         <form method="GET" action="/" class="glass-panel mb-8 rounded-3xl p-3 sm:p-4">
             @if(request('compare_city'))
@@ -269,14 +373,16 @@
         </form>
 
         <main class="space-y-8">
-            <x-weather.current-weather :latest="$latest" />
+            <!-- Hero Section: Current Weather + Hourly Forecast -->
+            <div class="grid gap-6 lg:grid-cols-[40%_60%] md:grid-cols-2">
+                <x-weather.current-weather :latest="$latest" />
+                <x-weather.hourly-forecast :forecast="$forecast" />
+            </div>
+
             <x-weather.risk-analysis :latest="$latest" :analysis="$riskAnalysis" />
-            <x-weather.alert-center :alerts="$alerts" />
-            <x-weather.comparison :latest="$latest" :comparison="$comparison" :city="$city" />
+            <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" />
             <x-weather.forecast :forecast="$forecast" />
             <x-weather.map :latest="$latest" />
-            <x-weather.leaderboard :leaderboards="$leaderboards" />
-            <x-weather.history :history="$history" />
         </main>
 
         <footer class="py-10 text-center text-xs font-semibold uppercase tracking-[0.25em] text-slate-600">
