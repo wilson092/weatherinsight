@@ -39,7 +39,7 @@ class WeatherDashboardController extends Controller
 
         // WEATHER INTELLIGENCE LAYER
         $riskAnalysis = $latest ? $ruleEngine->analyze($latest) : null;
-        $alerts = $latest ? $alertService->forWeather($latest) : [];
+        $alerts = $alertService->fromAnalysis($riskAnalysis);
         $leaderboards = $leaderboardService->rankings();
 
         return view('weather.dashboard', [

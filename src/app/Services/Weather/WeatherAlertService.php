@@ -2,68 +2,39 @@
 
 namespace App\Services\Weather;
 
-use App\Models\WeatherHistory;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
 
 class WeatherAlertService
 {
-    public function forWeather(?WeatherHistory $weather): array
+    /**
+     * Generate weather alerts from a risk analysis result.
+     *
+     * @param array|null $riskAnalysis The result from WeatherRuleEngineService::analyze()
+     * @return array
+     */
+    public function fromAnalysis(?array $riskAnalysis): array
     {
-        if (! $weather) {
+        if (! $riskAnalysis || Arr::get($riskAnalysis, 'risk_score', 0) <= 0) {
             return [];
         }
 
-        $alerts = [];
-        $thresholds = config('weather-risk.thresholds');
-        $weatherMain = strtolower((string) $weather->weather_main);
+        $category = Arr::get($riskAnalysis, 'risk_category');
 
-        if (in_array($weatherMain, ['rain', 'thunderstorm'], true)) {
-            $alerts[] = [
-                'key' => 'heavy-rain',
-                'title' => 'Heavy Rain Risk',
-                'message' => 'Rain activity may reduce visibility and disrupt outdoor travel.',
-                'level' => $weatherMain === 'thunderstorm' ? 'HIGH' : 'MEDIUM',
-                'icon' => 'heroicon-o-cloud-arrow-down',
-            ];
+        if (! $category) {
+            return [];
         }
 
-        if ($weather->temperature > $thresholds['temperature']) {
-            $alerts[] = [
-                'key' => 'extreme-heat',
-                'title' => 'Extreme Heat',
-                'message' => 'Limit prolonged outdoor activity and maintain hydration.',
-                'level' => 'HIGH',
-                'icon' => 'heroicon-o-sun',
-            ];
-        }
+        $activeRulesCount = count(Arr::get($riskAnalysis, 'triggered_rules', []));
 
-        if ($weather->wind_speed > $thresholds['wind_speed']) {
-            $alerts[] = [
-                'key' => 'strong-wind',
-                'title' => 'Strong Wind',
-                'message' => 'Secure loose objects and use caution in exposed areas.',
-                'level' => 'HIGH',
-                'icon' => 'heroicon-o-bars-3-bottom-left',
-            ];
-        }
-
-        if ($weather->humidity > $thresholds['high_humidity_alert']) {
-            $alerts[] = [
-                'key' => 'high-humidity',
-                'title' => 'High Humidity',
-                'message' => 'High moisture levels may increase heat discomfort.',
-                'level' => 'MEDIUM',
-                'icon' => 'heroicon-o-beaker',
-            ];
-        }
-
-        return $alerts;
-    }
-
-    public function activeCityCount(Collection $latestWeather): int
-    {
-        return $latestWeather
-            ->filter(fn (WeatherHistory $weather): bool => $this->forWeather($weather) !== [])
-            ->count();
+        return [
+            [
+                'key' => $category->level,
+                'title' => $category->name,
+                'message' => $category->description,
+                'level' => $category->severity,
+                'icon' => $category->icon,
+                'count' => $activeRulesCount,
+            ],
+        ];
     }
 }
