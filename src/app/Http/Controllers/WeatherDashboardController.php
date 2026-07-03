@@ -9,70 +9,26 @@ use App\Services\Weather\WeatherAlertService;
 use App\Services\Weather\WeatherComparisonService;
 use App\Services\Weather\WeatherLeaderboardService;
 use App\Services\Weather\WeatherRuleEngineService;
+use App\Services\Weather\WeatherSnapshotService;
 use Illuminate\Http\Request;
 
 class WeatherDashboardController extends Controller
 {
     public function index(
         Request $request,
-        OpenWeatherService $service,
         WeatherRuleEngineService $ruleEngine,
         WeatherAlertService $alertService,
-        WeatherComparisonService $comparisonService,
         WeatherLeaderboardService $leaderboardService,
+        WeatherSnapshotService $snapshotService,
+        OpenWeatherService $openWeather, // Keep for forecast
     ) {
         $city = $request->get('city', 'Jakarta');
 
-        $trackedCity = TrackedCity::firstOrCreate([
-            'city' => $city,
-        ]);
+        // Get latest weather data using the centralized service
+        $latest = $snapshotService->getLatest($city, auth()->id());
 
-        // FETCH CURRENT WEATHER
-        $data = $service->current($city);
-
-        // FETCH FORECAST
-        $forecast = $service->forecast($city);
-
-        // VALIDASI RESPONSE
-        if (isset($data['main'])) {
-
-            // SIMPAN WEATHER
-            $weather = WeatherHistory::create([
-                'tracked_city_id' => $trackedCity->id,
-                'user_id' => auth()->id(),
-                'city' => $city,
-                'latitude' => data_get($data, 'coord.lat'),
-                'longitude' => data_get($data, 'coord.lon'),
-                'timezone' => data_get($data, 'timezone'),
-                'country' => data_get($data, 'sys.country'),
-
-                'temperature' => $data['main']['temp'],
-                'humidity' => $data['main']['humidity'],
-                'pressure' => $data['main']['pressure'],
-                'wind_speed' => $data['wind']['speed'],
-
-                'weather_main' => $data['weather'][0]['main'],
-                'weather_description' => $data['weather'][0]['description'],
-                'weather_icon' => $data['weather'][0]['icon'],
-
-                'recorded_at' => now(),
-            ]);
-
-            // ANALISIS
-            $analysis = $ruleEngine->analyze($weather);
-
-            // UPDATE ANALISIS
-            $weather->update([
-                'recommendation' => $analysis['recommendation'],
-                'insight' => $analysis['insight'],
-                'risk_level' => $analysis['risk'],
-            ]);
-        }
-
-        // DATA TERBARU
-        $latest = WeatherHistory::where('city', $city)
-            ->latest()
-            ->first();
+        // Fetch forecast (still separate for now)
+        $forecast = $openWeather->forecast($city);
 
         // HISTORY
         $history = WeatherHistory::where('city', $city)
@@ -120,6 +76,14 @@ class WeatherDashboardController extends Controller
         $comparisonWeather = $comparisonData ? data_get($comparisonData, 'weather') : null;
         $comparisonAnalysis = $comparisonWeather ? $ruleEngine->analyze($comparisonWeather) : null;
 
+        // Generate Comparison Summary
+        $summary = $comparisonService->generateComparisonSummary(
+            $primaryAnalysis,
+            $comparisonAnalysis,
+            $primaryWeather,
+            $comparisonWeather
+        );
+
         return view('weather.comparison', [
             'primaryCity' => $primaryCity,
             'primaryWeather' => $primaryWeather,
@@ -128,6 +92,7 @@ class WeatherDashboardController extends Controller
             'comparisonWeather' => $comparisonWeather,
             'comparisonAnalysis' => $comparisonAnalysis,
             'comparisonError' => data_get($comparisonData, 'error'),
+            'summary' => $summary,
         ]);
     }
 

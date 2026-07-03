@@ -223,13 +223,6 @@
             </div>
 
             <!-- Comparison Summary -->
-            @php
-                $tempDiff = $primaryWeather->temperature - $comparisonWeather->temperature;
-                $humidityDiff = $primaryWeather->humidity - $comparisonWeather->humidity;
-                $windDiff = $primaryWeather->wind_speed - $comparisonWeather->wind_speed;
-                $riskDiff = ($primaryAnalysis['score'] ?? 0) - ($comparisonAnalysis['score'] ?? 0);
-            @endphp
-
             <section class="glass-panel relative overflow-hidden rounded-3xl p-6 sm:p-8">
                 <div class="absolute -right-16 top-0 h-56 w-56 rounded-full bg-purple-400/10 blur-3xl"></div>
                 
@@ -252,12 +245,7 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Temperature</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        @if(abs($tempDiff) < 1)
-                                            Both cities have similar temperatures
-                                        @else
-                                            <span class="font-semibold text-white">{{ $primaryWeather->city }}</span> is 
-                                            <span class="font-bold text-orange-300">{{ abs(round($tempDiff, 1)) }}°C {{ $tempDiff > 0 ? 'warmer' : 'cooler' }}</span>
-                                        @endif
+                                        {!! $summary['temperature'] !!}
                                     </p>
                                 </div>
                             </div>
@@ -270,12 +258,7 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Humidity</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        @if(abs($humidityDiff) < 5)
-                                            Similar humidity levels
-                                        @else
-                                            <span class="font-semibold text-white">{{ abs($humidityDiff) > 0 && $humidityDiff > 0 ? $primaryWeather->city : $comparisonWeather->city }}</span> is 
-                                            <span class="font-bold text-blue-300">{{ abs($humidityDiff) }}% more humid</span>
-                                        @endif
+                                        {!! $summary['humidity'] !!}
                                     </p>
                                 </div>
                             </div>
@@ -288,12 +271,7 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Wind Speed</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        @if(abs($windDiff) < 0.5)
-                                            Similar wind speeds
-                                        @else
-                                            <span class="font-semibold text-white">{{ abs($windDiff) > 0 && $windDiff > 0 ? $primaryWeather->city : $comparisonWeather->city }}</span> has 
-                                            <span class="font-bold text-teal-300">{{ abs(round($windDiff, 1)) }} m/s stronger winds</span>
-                                        @endif
+                                        {!! $summary['wind'] !!}
                                     </p>
                                 </div>
                             </div>
@@ -306,12 +284,7 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Risk Level</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        @if(abs($riskDiff) < 5)
-                                            Both cities have similar risk levels
-                                        @else
-                                            <span class="font-semibold text-white">{{ $riskDiff < 0 ? $comparisonWeather->city : $primaryWeather->city }}</span> is 
-                                            <span class="font-bold text-rose-300">safer (lower risk score)</span>
-                                        @endif
+                                        {!! $summary['risk'] !!}
                                     </p>
                                 </div>
                             </div>

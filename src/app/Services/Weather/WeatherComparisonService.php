@@ -9,9 +9,7 @@ use Throwable;
 class WeatherComparisonService
 {
     public function __construct(
-        private readonly OpenWeatherService $openWeather,
-        private readonly WeatherRuleEngineService $ruleEngine,
-        private readonly LatestWeatherSnapshotService $snapshots,
+        private readonly WeatherSnapshotService $snapshotService,
     ) {}
 
     public function findOrFetch(?string $city, ?int $userId = null): ?array
@@ -26,57 +24,15 @@ class WeatherComparisonService
             return $this->failure($city, 'City name is too long.');
         }
 
-        $existing = $this->snapshots->forCity($city);
+        $weather = $this->snapshotService->getLatest($city, $userId);
 
-        if ($existing) {
-            return [
-                'weather' => $existing,
-                'source' => 'history',
-                'error' => null,
-            ];
-        }
-
-        try {
-            $data = $this->openWeather->current($city);
-        } catch (Throwable) {
-            return $this->failure($city, 'Unable to reach OpenWeather for this city.');
-        }
-
-        if (! isset($data['main'], $data['wind'], $data['weather'][0])) {
+        if (! $weather) {
             return $this->failure($city, 'Weather data was not found for this city.');
         }
 
-        $trackedCity = TrackedCity::firstOrCreate(['city' => $city]);
-
-        $weather = WeatherHistory::create([
-            'tracked_city_id' => $trackedCity->id,
-            'user_id' => $userId,
-            'city' => $city,
-            'latitude' => data_get($data, 'coord.lat'),
-            'longitude' => data_get($data, 'coord.lon'),
-            'timezone' => data_get($data, 'timezone'),
-            'country' => data_get($data, 'sys.country'),
-            'temperature' => $data['main']['temp'],
-            'humidity' => $data['main']['humidity'],
-            'pressure' => $data['main']['pressure'],
-            'wind_speed' => $data['wind']['speed'],
-            'weather_main' => $data['weather'][0]['main'],
-            'weather_description' => $data['weather'][0]['description'],
-            'weather_icon' => $data['weather'][0]['icon'],
-            'recorded_at' => now(),
-        ]);
-
-        $analysis = $this->ruleEngine->analyze($weather);
-
-        $weather->update([
-            'recommendation' => $analysis['recommendation'],
-            'insight' => $analysis['insight'],
-            'risk_level' => $analysis['risk'],
-        ]);
-
         return [
-            'weather' => $weather->fresh(),
-            'source' => 'realtime',
+            'weather' => $weather,
+            'source' => $weather->wasRecentlyCreated ? 'realtime' : 'history',
             'error' => null,
         ];
     }
@@ -88,6 +44,56 @@ class WeatherComparisonService
             'source' => null,
             'city' => $city,
             'error' => $message,
+        ];
+    }
+
+    public function generateComparisonSummary(?array $primaryAnalysis, ?array $comparisonAnalysis, ?WeatherHistory $primaryWeather, ?WeatherHistory $comparisonWeather): ?array
+    {
+        if (! $primaryAnalysis || ! $comparisonAnalysis || ! $primaryWeather || ! $comparisonWeather) {
+            return null;
+        }
+
+        $primaryScore = $primaryAnalysis['score'] ?? 0;
+        $comparisonScore = $comparisonAnalysis['score'] ?? 0;
+        $riskDiff = $primaryScore - $comparisonScore;
+
+        $tempDiff = $primaryWeather->temperature - $comparisonWeather->temperature;
+        $humidityDiff = $primaryWeather->humidity - $comparisonWeather->humidity;
+        $windDiff = $primaryWeather->wind_speed - $comparisonWeather->wind_speed;
+
+        // Risk Summary
+        $riskSummary = 'Both cities have similar risk levels.';
+        if (abs($riskDiff) >= 5) {
+            $saferCity = $riskDiff < 0 ? $primaryWeather->city : $comparisonWeather->city;
+            $riskSummary = "<span class=\"font-semibold text-white\">{$saferCity}</span> is <span class=\"font-bold text-rose-300\">safer (lower risk score)</span>.";
+        }
+
+        // Temperature Summary
+        $tempSummary = 'Both cities have similar temperatures.';
+        if (abs($tempDiff) >= 1) {
+            $adj = $tempDiff > 0 ? 'warmer' : 'cooler';
+            $tempSummary = "<span class=\"font-semibold text-white\">{$primaryWeather->city}</span> is <span class=\"font-bold text-orange-300\">".abs(round($tempDiff, 1))."°C {$adj}</span>.";
+        }
+
+        // Humidity Summary
+        $humiditySummary = 'Similar humidity levels.';
+        if (abs($humidityDiff) >= 5) {
+            $moreHumidCity = $humidityDiff > 0 ? $primaryWeather->city : $comparisonWeather->city;
+            $humiditySummary = "<span class=\"font-semibold text-white\">{$moreHumidCity}</span> is <span class=\"font-bold text-blue-300\">".abs($humidityDiff)."% more humid</span>.";
+        }
+
+        // Wind Summary
+        $windSummary = 'Similar wind speeds.';
+        if (abs($windDiff) >= 0.5) {
+            $windierCity = $windDiff > 0 ? $primaryWeather->city : $comparisonWeather->city;
+            $windSummary = "<span class=\"font-semibold text-white\">{$windierCity}</span> has <span class=\"font-bold text-teal-300\">".abs(round($windDiff, 1))." m/s stronger winds</span>.";
+        }
+
+        return [
+            'risk' => $riskSummary,
+            'temperature' => $tempSummary,
+            'humidity' => $humiditySummary,
+            'wind' => $windSummary,
         ];
     }
 }
