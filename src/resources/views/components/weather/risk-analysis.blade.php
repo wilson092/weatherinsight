@@ -54,7 +54,6 @@
             </span>
             <h2 id="risk-analysis-title" class="text-base font-black text-white">Weather Risk Assessment</h2>
         </div>
-        <span class="rounded-full border border-cyan-400/30 px-4 py-2 text-xs font-black text-slate-200">Rule Analysis</span>
     </div>
 
     <div class="grid gap-5 lg:grid-cols-[180px_1fr] xl:grid-cols-1 2xl:grid-cols-[180px_1fr]">

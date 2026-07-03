@@ -267,10 +267,6 @@
                     </button>
                 </form>
 
-                <button type="button" class="relative hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-slate-300 transition hover:border-cyan-400 hover:text-cyan-300 sm:flex" title="Notifications">
-                    <x-heroicon-o-bell class="h-5 w-5" />
-                    <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-400"></span>
-                </button>
 
                 <div class="hidden items-center gap-2 sm:flex">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-sm font-bold text-slate-300">
@@ -374,10 +370,6 @@
                         class="h-12 w-full rounded-2xl border border-transparent bg-slate-950/40 pl-13 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
                     >
                 </label>
-                <button type="button" @click="detectLocation()" class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-cyan-300 transition hover:bg-cyan-400/10 hover:text-cyan-200">
-                    <x-heroicon-o-map-pin class="h-5 w-5" />
-                    <span x-text="locating ? 'Detecting...' : 'Detect My Location'"></span>
-                </button>
                 <button type="submit" class="inline-flex h-12 items-center justify-center rounded-2xl bg-cyan-400 px-6 text-sm font-black text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-300">
                     Search
                 </button>
