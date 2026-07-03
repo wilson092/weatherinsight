@@ -10,10 +10,6 @@
     };
 
     $recordedAt = $latest?->recorded_at ?? now();
-    $visibility = $latest?->getAttribute('visibility');
-    $uvIndex = $latest?->getAttribute('uv_index');
-    $feelsLike = $latest?->getAttribute('feels_like');
-
     $metrics = [
         [
             'label' => 'Humidity',
@@ -35,27 +31,6 @@
             'icon' => 'heroicon-o-bars-3-bottom-left',
             'hint' => $latest ? number_format($latest->wind_speed, 1).' m/s' : null,
             'tone' => 'text-sky-300',
-        ],
-        [
-            'label' => 'Visibility',
-            'value' => $visibility !== null ? number_format($visibility / 1000, 1).' km' : '--',
-            'icon' => 'heroicon-o-eye',
-            'hint' => null,
-            'tone' => 'text-teal-300',
-        ],
-        [
-            'label' => 'UV Index',
-            'value' => $uvIndex !== null ? number_format($uvIndex, 0) : '--',
-            'icon' => 'heroicon-o-sun',
-            'hint' => null,
-            'tone' => 'text-yellow-300',
-        ],
-        [
-            'label' => 'Feels Like',
-            'value' => $feelsLike !== null ? number_format($feelsLike, 0).'°C' : '--',
-            'icon' => 'heroicon-o-hand-raised',
-            'hint' => null,
-            'tone' => 'text-rose-300',
         ],
     ];
 @endphp
@@ -101,14 +76,12 @@
                 <p class="mt-1 max-w-xs text-sm capitalize text-slate-200">{{ $latest?->weather_description ?? 'Waiting for weather data' }}</p>
             </div>
 
-            @if($feelsLike !== null)
-                <div class="hidden rounded-full border border-white/10 bg-slate-950/35 px-4 py-2 text-xs font-bold text-slate-200 sm:block">
-                    Feels like {{ number_format($feelsLike, 0) }}°C
-                </div>
-            @endif
+            <div class="hidden rounded-full border border-white/10 bg-slate-950/35 px-4 py-2 text-xs font-bold text-slate-200 sm:block">
+                {{ $latest?->risk_level ?? 'Monitoring' }}
+            </div>
         </div>
 
-        <div class="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
+        <div class="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             @foreach($metrics as $metric)
                 <article class="rounded-2xl border border-white/10 bg-slate-950/38 p-3 shadow-xl shadow-slate-950/10 transition duration-300 hover:border-cyan-400/50 hover:bg-slate-900/55">
                     <div class="flex items-center gap-2">

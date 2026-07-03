@@ -105,17 +105,17 @@ class WeatherDashboardController extends Controller
 
     public function history(Request $request)
     {
-        $city = $request->get('city', 'Jakarta');
         $date = $request->get('date');
 
-        $query = WeatherHistory::where('city', $city)
+        $query = WeatherHistory::query()
             ->orderBy('recorded_at', 'desc');
 
         if ($date) {
             $query->whereDate('recorded_at', $date);
         }
 
-        $history = $query->paginate(20);
+        $history = $query->paginate(20)->appends($request->only('date'));
+        $city = null;
 
         return view('weather.history', compact('history', 'city'));
     }

@@ -3,6 +3,12 @@
 @php
     $score = (int) ($analysis['score'] ?? $latest?->risk_score ?? 0);
     $riskLevel = $analysis['risk'] ?? $latest?->risk_level ?? 'Low';
+    $riskKey = match (true) {
+        str_contains(strtolower($riskLevel), 'extreme') => 'Extreme',
+        str_contains(strtolower($riskLevel), 'high') => 'High',
+        str_contains(strtolower($riskLevel), 'medium') => 'Medium',
+        default => 'Low',
+    };
     $triggeredRules = $analysis['triggered_rules'] ?? [];
     $triggeredIds = array_column($triggeredRules, 'id');
     $allRules = \App\Models\WeatherRule::where('is_active', true)->get();
@@ -12,7 +18,7 @@
     $circumference = 2 * pi() * $radius;
     $offset = $circumference - ($percentage / 100 * $circumference);
 
-    $tone = match ($riskLevel) {
+    $tone = match ($riskKey) {
         'Extreme' => ['text' => 'text-purple-300', 'stroke' => '#c084fc', 'bg' => 'bg-purple-500/10', 'border' => 'border-purple-400/30'],
         'High' => ['text' => 'text-rose-300', 'stroke' => '#fb7185', 'bg' => 'bg-rose-500/10', 'border' => 'border-rose-400/30'],
         'Medium' => ['text' => 'text-amber-300', 'stroke' => '#fbbf24', 'bg' => 'bg-amber-500/10', 'border' => 'border-amber-400/30'],

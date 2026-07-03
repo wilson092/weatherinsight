@@ -6,20 +6,6 @@
     <meta name="theme-color" content="#071426">
     <title>Weather Intelligence Dashboard</title>
 
-    <link
-        rel="stylesheet"
-
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""
-    />
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-        defer
-    ></script>
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -52,8 +38,11 @@
             background: #0f172a;
             color: #0f172a;
             font-family: inherit;
+            height: 100%;
             overflow: hidden;
+            position: relative;
             touch-action: pan-x pan-y;
+            width: 100%;
         }
 
         .leaflet-pane,
@@ -85,6 +74,10 @@
         }
 
         .leaflet-pane {
+            z-index: 400;
+        }
+
+        .leaflet-map-pane {
             z-index: 400;
         }
 
@@ -413,7 +406,7 @@
 
             <div class="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
                 <x-weather.map :latest="$latest" />
-                <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" />
+                <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" :latest="$latest" />
             </div>
         </main>
 

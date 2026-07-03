@@ -14,16 +14,12 @@
         $timezoneLabel = 'UTC'.$sign.str_pad((string) $hours, 2, '0', STR_PAD_LEFT).':'.str_pad((string) $minutes, 2, '0', STR_PAD_LEFT);
     }
 
-    $sunrise = $latest?->getAttribute('sunrise');
-    $sunset = $latest?->getAttribute('sunset');
     $locationRows = [
         ['label' => 'City', 'value' => $latest?->city ?? 'Unavailable', 'icon' => 'heroicon-o-building-office-2', 'tone' => 'text-cyan-300'],
         ['label' => 'Country', 'value' => $latest?->country ?? 'Unavailable', 'icon' => 'heroicon-o-flag', 'tone' => 'text-sky-300'],
         ['label' => 'Latitude', 'value' => $latest?->latitude !== null ? number_format($latest->latitude, 4) : 'Unavailable', 'icon' => 'heroicon-o-map-pin', 'tone' => 'text-teal-300'],
         ['label' => 'Longitude', 'value' => $latest?->longitude !== null ? number_format($latest->longitude, 4) : 'Unavailable', 'icon' => 'heroicon-o-globe-alt', 'tone' => 'text-blue-300'],
         ['label' => 'Timezone', 'value' => $timezoneLabel, 'icon' => 'heroicon-o-clock', 'tone' => 'text-slate-300'],
-        ['label' => 'Sunrise', 'value' => $sunrise ? \Carbon\Carbon::parse($sunrise)->format('H:i') : 'Unavailable', 'icon' => 'heroicon-o-sun', 'tone' => 'text-amber-300'],
-        ['label' => 'Sunset', 'value' => $sunset ? \Carbon\Carbon::parse($sunset)->format('H:i') : 'Unavailable', 'icon' => 'heroicon-o-moon', 'tone' => 'text-indigo-300'],
     ];
 @endphp
 
@@ -38,9 +34,24 @@
     <div class="grid gap-4 lg:grid-cols-[1fr_280px]">
         <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
             @if($hasLocation)
-                <div id="{{ $mapId }}" class="h-[300px] w-full sm:h-[330px]"></div>
+                <div class="relative w-full" style="height: 365px;">
+                    <div
+                        id="{{ $mapId }}"
+                        class="h-full w-full"
+                        data-latitude="{{ (float) $latest->latitude }}"
+                        data-longitude="{{ (float) $latest->longitude }}"
+                        data-city="{{ $latest->city }}"
+                        data-temperature="{{ number_format($latest->temperature, 1) }} °C"
+                        data-condition="{{ $latest->weather_description ?? $latest->weather_main ?? 'Unavailable' }}"
+                        data-humidity="{{ number_format($latest->humidity, 0) }} %"
+                        data-wind-speed="{{ number_format($latest->wind_speed * 3.6, 0) }} km/h"
+                    ></div>
+                    <div data-map-status-for="{{ $mapId }}" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-slate-950/35 text-sm font-semibold text-slate-400">
+                        Loading map...
+                    </div>
+                </div>
             @else
-                <div class="flex h-[300px] flex-col items-center justify-center px-6 text-center sm:h-[330px]">
+                <div class="flex flex-col items-center justify-center px-6 text-center" style="height: 365px;">
                     <x-heroicon-o-map-pin class="h-14 w-14 text-slate-600" />
                     <p class="mt-4 text-lg font-black text-white">Location Unavailable</p>
                     <p class="mt-2 max-w-md text-sm leading-6 text-slate-400">
@@ -69,28 +80,93 @@
 
 @if($hasLocation)
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (! window.L) {
-                return;
-            }
+        (() => {
+            console.log('Loading map...');
 
-            const mapElement = document.getElementById(@js($mapId));
-
-            if (! mapElement || mapElement.dataset.initialized === 'true') {
-                return;
-            }
-
-            mapElement.dataset.initialized = 'true';
-
-            const weatherLocation = {
-                city: @js($latest->city),
-                latitude: @js((float) $latest->latitude),
-                longitude: @js((float) $latest->longitude),
-                temperature: @js(number_format($latest->temperature, 1).' °C'),
-                condition: @js($latest->weather_description ?? $latest->weather_main ?? 'Unavailable'),
-                humidity: @js(number_format($latest->humidity, 0).' %'),
-                windSpeed: @js(number_format($latest->wind_speed * 3.6, 0).' km/h'),
+            window.onerror = (message, source, lineno, colno, error) => {
+                console.error('Weather map JavaScript error:', {
+                    message,
+                    source,
+                    lineno,
+                    colno,
+                    error,
+                });
             };
+
+            const leafletCssUrl = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            const leafletJsUrl = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            const mapId = @js($mapId);
+            const mapElement = document.getElementById(mapId);
+            const statusElement = document.querySelector(`[data-map-status-for="${mapId}"]`);
+
+            console.log('Weather map id:', mapId);
+            console.log('Weather map element:', mapElement);
+            console.log('Leaflet type before load:', typeof window.L);
+
+            const setStatus = (message, isError = false) => {
+                if (! statusElement) {
+                    return;
+                }
+
+                statusElement.textContent = message;
+                statusElement.classList.toggle('text-rose-300', isError);
+                statusElement.classList.toggle('text-slate-400', ! isError);
+                statusElement.classList.remove('hidden');
+            };
+
+            const hideStatus = () => {
+                statusElement?.classList.add('hidden');
+            };
+
+            const ensureLeafletCss = () => {
+                if (document.querySelector(`link[href="${leafletCssUrl}"]`)) {
+                    return;
+                }
+
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = leafletCssUrl;
+                link.crossOrigin = '';
+                document.head.appendChild(link);
+            };
+
+            const ensureLeafletJs = () => new Promise((resolve, reject) => {
+                if (window.L) {
+                    resolve(window.L);
+                    return;
+                }
+
+                const existingScript = document.querySelector(`script[src="${leafletJsUrl}"]`);
+
+                if (existingScript) {
+                    existingScript.addEventListener('load', () => resolve(window.L), { once: true });
+                    existingScript.addEventListener('error', reject, { once: true });
+
+                    let attempts = 0;
+                    const interval = window.setInterval(() => {
+                        attempts += 1;
+
+                        if (window.L) {
+                            window.clearInterval(interval);
+                            resolve(window.L);
+                        }
+
+                        if (attempts > 60) {
+                            window.clearInterval(interval);
+                            reject(new Error('Leaflet did not become available.'));
+                        }
+                    }, 100);
+
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = leafletJsUrl;
+                script.crossOrigin = '';
+                script.onload = () => resolve(window.L);
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
 
             const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
                 '&': '&amp;',
@@ -100,32 +176,95 @@
                 "'": '&#039;',
             }[character]));
 
-            const map = L.map(mapElement, {
-                zoomControl: true,
-                scrollWheelZoom: false,
-            }).setView([weatherLocation.latitude, weatherLocation.longitude], 11);
+            const initMap = async () => {
+                console.log('initMap() called');
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors',
-            }).addTo(map);
+                if (! mapElement || mapElement.dataset.initialized === 'true') {
+                    console.log('initMap() stopped:', {
+                        mapElementFound: Boolean(mapElement),
+                        initialized: mapElement?.dataset.initialized,
+                    });
+                    return;
+                }
 
-            const popupContent = `
-                <div class="weather-map-popup">
-                    <strong>${escapeHtml(weatherLocation.city)}</strong>
-                    <span>${escapeHtml(weatherLocation.temperature)}</span>
-                    <span>${escapeHtml(weatherLocation.condition)}</span>
-                    <span>Humidity: ${escapeHtml(weatherLocation.humidity)}</span>
-                    <span>Wind: ${escapeHtml(weatherLocation.windSpeed)}</span>
-                </div>
-            `;
+                setStatus('Loading map...');
+                ensureLeafletCss();
 
-            L.marker([weatherLocation.latitude, weatherLocation.longitude])
-                .addTo(map)
-                .bindPopup(popupContent)
-                .openPopup();
+                try {
+                    await ensureLeafletJs();
+                } catch (error) {
+                    console.error('Leaflet failed to load:', error);
+                    setStatus('Map library failed to load.', true);
+                    return;
+                }
 
-            window.setTimeout(() => map.invalidateSize(), 150);
-        });
+                console.log('Leaflet type after load:', typeof window.L);
+
+                if (! window.L) {
+                    setStatus('Map library is unavailable.', true);
+                    return;
+                }
+
+                mapElement.dataset.initialized = 'true';
+
+                const weatherLocation = {
+                    city: mapElement.dataset.city,
+                    latitude: Number(mapElement.dataset.latitude),
+                    longitude: Number(mapElement.dataset.longitude),
+                    temperature: mapElement.dataset.temperature,
+                    condition: mapElement.dataset.condition,
+                    humidity: mapElement.dataset.humidity,
+                    windSpeed: mapElement.dataset.windSpeed,
+                };
+
+                if (! Number.isFinite(weatherLocation.latitude) || ! Number.isFinite(weatherLocation.longitude)) {
+                    console.error('Invalid weather map coordinates:', weatherLocation);
+                    setStatus('Invalid map coordinates.', true);
+                    return;
+                }
+
+                const map = window.L.map(mapElement, {
+                    zoomControl: true,
+                    scrollWheelZoom: false,
+                }).setView([weatherLocation.latitude, weatherLocation.longitude], 11);
+
+                console.log(map);
+
+                const tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors',
+                }).addTo(map);
+
+                console.log('Weather map tile layer created:', tileLayer);
+
+                const popupContent = `
+                    <div class="weather-map-popup">
+                        <strong>${escapeHtml(weatherLocation.city)}</strong>
+                        <span>${escapeHtml(weatherLocation.temperature)}</span>
+                        <span>${escapeHtml(weatherLocation.condition)}</span>
+                        <span>Humidity: ${escapeHtml(weatherLocation.humidity)}</span>
+                        <span>Wind: ${escapeHtml(weatherLocation.windSpeed)}</span>
+                    </div>
+                `;
+
+                const marker = window.L.marker([weatherLocation.latitude, weatherLocation.longitude])
+                    .addTo(map)
+                    .bindPopup(popupContent)
+                    .openPopup();
+
+                console.log('Weather map marker created:', marker);
+
+                window.setTimeout(() => {
+                    map.invalidateSize();
+                    hideStatus();
+                }, 200);
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initMap, { once: true });
+            } else {
+                initMap();
+            }
+        })();
     </script>
 @endif

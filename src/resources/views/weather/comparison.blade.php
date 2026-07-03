@@ -227,6 +227,44 @@
                 <div class="absolute -right-16 top-0 h-56 w-56 rounded-full bg-purple-400/10 blur-3xl"></div>
                 
                 <div class="relative">
+                    @php
+                        $temperatureDiff = $comparisonWeather->temperature - $primaryWeather->temperature;
+                        $humidityDiff = $comparisonWeather->humidity - $primaryWeather->humidity;
+                        $windDiff = $comparisonWeather->wind_speed - $primaryWeather->wind_speed;
+                        $riskRank = ['Low' => 1, 'Medium' => 2, 'High' => 3, 'Extreme' => 4];
+                        $primaryRisk = $primaryAnalysis['risk'] ?? $primaryWeather->risk_level ?? 'Low';
+                        $comparisonRisk = $comparisonAnalysis['risk'] ?? $comparisonWeather->risk_level ?? 'Low';
+                        $riskKey = fn ($risk) => match (true) {
+                            str_contains(strtolower($risk), 'extreme') => 'Extreme',
+                            str_contains(strtolower($risk), 'high') => 'High',
+                            str_contains(strtolower($risk), 'medium') => 'Medium',
+                            default => 'Low',
+                        };
+                        $riskDiff = ($riskRank[$riskKey($comparisonRisk)] ?? 0) <=> ($riskRank[$riskKey($primaryRisk)] ?? 0);
+                        $badgeItems = [
+                            [
+                                'icon' => 'heroicon-o-fire',
+                                'label' => number_format(abs($temperatureDiff), 1).'°C '.($temperatureDiff >= 0 ? 'Warmer' : 'Cooler'),
+                                'tone' => $temperatureDiff >= 0 ? 'border-orange-400/30 bg-orange-500/10 text-orange-300' : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-300',
+                            ],
+                            [
+                                'icon' => 'heroicon-o-beaker',
+                                'label' => number_format(abs($humidityDiff), 0).'% '.($humidityDiff >= 0 ? 'More Humid' : 'Drier'),
+                                'tone' => $humidityDiff >= 0 ? 'border-sky-400/30 bg-sky-500/10 text-sky-300' : 'border-amber-400/30 bg-amber-500/10 text-amber-300',
+                            ],
+                            [
+                                'icon' => 'heroicon-o-arrow-trending-up',
+                                'label' => number_format(abs($windDiff), 1).' m/s '.($windDiff >= 0 ? 'Stronger Wind' : 'Calmer Wind'),
+                                'tone' => $windDiff >= 0 ? 'border-teal-400/30 bg-teal-500/10 text-teal-300' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
+                            ],
+                            [
+                                'icon' => 'heroicon-o-shield-check',
+                                'label' => $riskDiff === 0 ? 'Same Risk Level' : ($riskDiff < 0 ? 'Safer Risk Level' : 'Higher Risk Level'),
+                                'tone' => $riskDiff <= 0 ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' : 'border-rose-400/30 bg-rose-500/10 text-rose-300',
+                            ],
+                        ];
+                    @endphp
+
                     <div class="mb-6 flex items-center gap-3">
                         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-400/20 to-pink-400/10">
                             <x-heroicon-o-chart-bar class="h-6 w-6 text-purple-300" />
@@ -235,6 +273,15 @@
                             <p class="text-xs font-bold uppercase tracking-[0.25em] text-purple-300">Analysis</p>
                             <h2 class="text-2xl font-black text-white">Comparison Summary</h2>
                         </div>
+                    </div>
+
+                    <div class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        @foreach($badgeItems as $badge)
+                            <div class="flex items-center gap-3 rounded-2xl border px-4 py-3 {{ $badge['tone'] }}">
+                                <x-dynamic-component :component="$badge['icon']" class="h-5 w-5 flex-none" />
+                                <span class="text-sm font-black">{{ $badge['label'] }}</span>
+                            </div>
+                        @endforeach
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">

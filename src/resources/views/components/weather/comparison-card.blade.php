@@ -24,6 +24,13 @@
         'High' => 'text-rose-300',
         'Extreme' => 'text-purple-300',
     ];
+
+    $riskKey = fn ($risk) => match (true) {
+        str_contains(strtolower($risk ?? ''), 'extreme') => 'Extreme',
+        str_contains(strtolower($risk ?? ''), 'high') => 'High',
+        str_contains(strtolower($risk ?? ''), 'medium') => 'Medium',
+        default => 'Low',
+    };
 @endphp
 
 <article class="glass-panel relative overflow-hidden rounded-3xl border p-6 sm:p-8 {{ $style['border'] }} {{ $style['bg'] }}">
@@ -112,7 +119,7 @@
                             <x-heroicon-o-shield-exclamation class="h-5 w-5 text-slate-400" />
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Risk Analysis</span>
                         </div>
-                        <span class="text-sm font-black {{ $riskColors[$analysis['risk']] ?? 'text-slate-300' }}">
+                        <span class="text-sm font-black {{ $riskColors[$riskKey($analysis['risk'] ?? null)] ?? 'text-slate-300' }}">
                             {{ $analysis['risk'] ?? 'Unknown' }}
                         </span>
                     </div>
@@ -120,7 +127,7 @@
                         <div class="flex-1">
                             <div class="h-2 overflow-hidden rounded-full bg-slate-800">
                                 <div 
-                                    class="h-full rounded-full transition-all {{ $analysis['risk'] === 'Extreme' ? 'bg-purple-400' : ($analysis['risk'] === 'High' ? 'bg-rose-400' : ($analysis['risk'] === 'Medium' ? 'bg-amber-400' : 'bg-emerald-400')) }}"
+                                    class="h-full rounded-full transition-all {{ $riskKey($analysis['risk'] ?? null) === 'Extreme' ? 'bg-purple-400' : ($riskKey($analysis['risk'] ?? null) === 'High' ? 'bg-rose-400' : ($riskKey($analysis['risk'] ?? null) === 'Medium' ? 'bg-amber-400' : 'bg-emerald-400')) }}"
                                     style="width: {{ min(($analysis['score'] ?? 0), 100) }}%"
                                 ></div>
                             </div>

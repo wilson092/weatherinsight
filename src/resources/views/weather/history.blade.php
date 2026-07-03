@@ -164,20 +164,7 @@
 
         <!-- Filter Section -->
         <form method="GET" action="/history" class="glass-panel mb-6 rounded-3xl p-4 sm:p-6">
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <!-- City Filter -->
-                <label class="relative">
-                    <span class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">City</span>
-                    <x-heroicon-o-map-pin class="pointer-events-none absolute left-3 top-10 h-5 w-5 text-slate-400" />
-                    <input
-                        type="text"
-                        name="city"
-                        value="{{ request('city', $city) }}"
-                        placeholder="Enter city name"
-                        class="w-full rounded-2xl border border-white/10 bg-slate-950/40 py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
-                    >
-                </label>
-
+            <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
                 <!-- Date Filter -->
                 <label class="relative">
                     <span class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">Date</span>
@@ -195,10 +182,10 @@
                     <button type="submit" class="flex-1 rounded-2xl bg-gradient-to-r from-cyan-400 to-teal-400 px-6 py-3 font-bold text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:brightness-110">
                         <span class="flex items-center justify-center gap-2">
                             <x-heroicon-o-funnel class="h-5 w-5" />
-                            Filter
+                            Date
                         </span>
                     </button>
-                    <a href="/history" class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/40 text-slate-400 transition hover:border-cyan-400 hover:text-cyan-400" title="Clear filters">
+                    <a href="/history" class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/40 text-slate-400 transition hover:border-cyan-400 hover:text-cyan-400" title="Refresh history">
                         <x-heroicon-o-arrow-path class="h-5 w-5" />
                     </a>
                 </div>
@@ -277,7 +264,7 @@
                                 <td colspan="8" class="px-6 py-12 text-center">
                                     <x-heroicon-o-inbox class="mx-auto mb-3 h-12 w-12 text-slate-600" />
                                     <p class="text-sm font-semibold text-slate-500">No weather history found</p>
-                                    <p class="mt-1 text-xs text-slate-600">Try adjusting your filters or search for a different city</p>
+                                    <p class="mt-1 text-xs text-slate-600">Try adjusting the date filter or refresh the table</p>
                                 </td>
                             </tr>
                         @endforelse
