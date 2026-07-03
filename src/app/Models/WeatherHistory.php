@@ -40,4 +40,20 @@ class WeatherHistory extends Model
         'wind_speed' => 'float',
         'risk_score' => 'integer',
     ];
+
+    public function getModalData()
+    {
+        return [
+            'city' => $this->city,
+            'recorded_at' => $this->recorded_at ? $this->recorded_at->toIso8601String() : null,
+            'temperature' => $this->temperature,
+            'humidity' => $this->humidity,
+            'pressure' => $this->pressure,
+            'wind_speed' => $this->wind_speed,
+            'risk_level' => $this->risk_level,
+            'weather_description' => $this->weather_description,
+            'recommendation' => $this->recommendation,
+            'insight' => $this->insight,
+        ];
+    }
 }

@@ -8,7 +8,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
+        [x-cloak] { display: none !important; }
         html {
             background-color: #06111f;
         }
@@ -221,7 +224,7 @@
                     <tbody class="divide-y divide-white/5">
                         @forelse($history as $record)
                             <tr 
-                                @click="selectedRecord = {{ json_encode($record) }}"
+                                @click="selectedRecord = {{ json_encode($record->getModalData()) }}"
                                 class="cursor-pointer transition-colors hover:bg-white/5"
                             >
                                 <td class="px-4 py-4 text-sm font-medium text-slate-300 sm:px-6">
