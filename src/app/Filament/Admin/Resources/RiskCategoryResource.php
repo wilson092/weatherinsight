@@ -35,16 +35,22 @@ class RiskCategoryResource extends Resource
                         'high' => 'Tinggi',
                     ])
                     ->required(),
-                Forms\Components\TextInput::make('min_temperature')
-                    ->label('Suhu Minimum (°C)')
+                Forms\Components\TextInput::make('min_score')
+                    ->label('Skor Minimum')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('max_temperature')
-                    ->label('Suhu Maksimum (°C)')
+                Forms\Components\TextInput::make('max_score')
+                    ->label('Skor Maksimum')
                     ->helperText('Kosongkan jika tidak ada batas maksimum.')
                     ->numeric(),
-                Forms\Components\Textarea::make('description')
-                    ->label('Deskripsi')
+                Forms\Components\Textarea::make('recommendation')
+                    ->label('Rekomendasi')
+                    ->helperText('Rekomendasi aktivitas atau tindakan yang disarankan untuk pengguna.')
+                    ->maxLength(65535)
+                    ->columnSpanFull(),
+                Forms\Components\Textarea::make('insight')
+                    ->label('Wawasan (Insight)')
+                    ->helperText('Penjelasan atau wawasan tambahan mengenai kondisi cuaca terkait.')
                     ->maxLength(65535)
                     ->columnSpanFull(),
                 Forms\Components\Toggle::make('is_active')
@@ -60,13 +66,13 @@ class RiskCategoryResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama Kategori')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('temperature_range')
-                    ->label('Rentang Suhu')
+                Tables\Columns\TextColumn::make('score_range')
+                    ->label('Rentang Skor')
                     ->formatStateUsing(function ($state, RiskCategory $record) {
-                        if (is_null($record->max_temperature)) {
-                            return "≥ {$record->min_temperature}°C";
+                        if (is_null($record->max_score)) {
+                            return "≥ {$record->min_score}";
                         }
-                        return "{$record->min_temperature}°C - {$record->max_temperature}°C";
+                        return "{$record->min_score} - {$record->max_score}";
                     }),
                 Tables\Columns\BadgeColumn::make('risk_level')
                     ->label('Level Risiko')

@@ -14,15 +14,18 @@ class WeatherRuleEngineService
         $score = $analysis['score'];
         $triggeredRules = $analysis['triggered_rules'];
 
-        $riskCategory = RiskCategory::where('min_temperature', '<=', $score)
-            ->where('max_temperature', '>=', $score)
+        $riskCategory = RiskCategory::where('min_score', '<=', $score)
+            ->where(function ($query) use ($score) {
+                $query->where('max_score', '>=', $score)
+                    ->orWhereNull('max_score');
+            })
             ->where('is_active', true)
             ->first();
 
         if ($riskCategory) {
             $risk = $riskCategory->name;
-            $recommendation = $riskCategory->description;
-            $insight = $riskCategory->description;
+            $recommendation = $riskCategory->recommendation ?? 'No specific recommendation available.';
+            $insight = $riskCategory->insight ?? 'No specific insight available.';
         } else {
             $risk = 'N/A';
             $recommendation = 'No risk category found for the calculated score.';

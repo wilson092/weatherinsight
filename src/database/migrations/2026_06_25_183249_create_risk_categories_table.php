@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('risk_level');
-            $table->decimal('min_temperature', 5, 2);
-            $table->decimal('max_temperature', 5, 2)->nullable();
+            $table->unsignedInteger('min_score');
+            $table->unsignedInteger('max_score')->nullable();
             $table->string('color_badge');
-            $table->text('description')->nullable();
+            $table->text('recommendation')->nullable();
+            $table->text('insight')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
