@@ -99,11 +99,19 @@ class WeatherDashboardController extends Controller
         ]);
     }
 
-    public function leaderboard(WeatherLeaderboardService $leaderboardService)
+    public function leaderboard()
     {
-        $leaderboards = $leaderboardService->rankings();
+        $hottestCities = WeatherHistory::getHottestCities();
+        $coldestCities = WeatherHistory::getColdestCities();
+        $mostHumidCities = WeatherHistory::getMostHumidCities();
+        $windiestCities = WeatherHistory::getWindiestCities();
 
-        return view('weather.leaderboard', compact('leaderboards'));
+        return view('weather.leaderboard', compact(
+            'hottestCities',
+            'coldestCities',
+            'mostHumidCities',
+            'windiestCities'
+        ));
     }
 
     public function history(Request $request)

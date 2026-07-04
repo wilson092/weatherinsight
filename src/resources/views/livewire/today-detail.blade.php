@@ -131,28 +131,6 @@
         </div>
 
         <!-- Footer: Sunrise/Sunset -->
-        @if($isToday && $latest->sunrise && $latest->sunset && $timezoneString)
-        <div class="grid grid-cols-2 gap-px border-t border-white/10 bg-slate-900/50 px-6 py-4">
-            <div class="flex items-center gap-4">
-                <img src="{{ asset('images/icons/sunrise.svg') }}" alt="Sunrise" class="h-10 w-10">
-                <div>
-                    <p class="text-sm text-slate-400">Sunrise</p>
-                    <p class="text-lg font-semibold text-white">
-                        {{ \Carbon\Carbon::createFromTimestamp($latest->sunrise)->setTimezone($timezoneString)->format('H:i') }}
-                    </p>
-                </div>
-            </div>
-            <div class="flex items-center gap-4 justify-end border-l border-slate-700/50 pl-6">
-                 <img src="{{ asset('images/icons/sunset.svg') }}" alt="Sunset" class="h-10 w-10">
-                <div>
-                    <p class="text-sm text-slate-400">Sunset</p>
-                    <p class="text-lg font-semibold text-white">
-                        {{ \Carbon\Carbon::createFromTimestamp($latest->sunset)->setTimezone($timezoneString)->format('H:i') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        @endif
     @else
         <div class="flex h-full items-center justify-center p-5 text-center">
             <p class="text-slate-400">Weather data is currently unavailable.</p>

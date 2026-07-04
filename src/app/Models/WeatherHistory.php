@@ -66,4 +66,44 @@ class WeatherHistory extends Model
 
         return RiskCategory::forScore((int) $this->risk_score);
     }
+
+    public static function getHottestCities()
+    {
+        return self::query()
+            ->select('city', 'temperature', 'weather_icon', 'weather_description')
+            ->orderByDesc('temperature')
+            ->groupBy('city', 'temperature', 'weather_icon', 'weather_description')
+            ->limit(5)
+            ->get();
+    }
+
+    public static function getColdestCities()
+    {
+        return self::query()
+            ->select('city', 'temperature', 'weather_icon', 'weather_description')
+            ->orderBy('temperature')
+            ->groupBy('city', 'temperature', 'weather_icon', 'weather_description')
+            ->limit(5)
+            ->get();
+    }
+
+    public static function getMostHumidCities()
+    {
+        return self::query()
+            ->select('city', 'humidity')
+            ->orderByDesc('humidity')
+            ->groupBy('city', 'humidity')
+            ->limit(5)
+            ->get();
+    }
+
+    public static function getWindiestCities()
+    {
+        return self::query()
+            ->select('city', 'wind_speed')
+            ->orderByDesc('wind_speed')
+            ->groupBy('city', 'wind_speed')
+            ->limit(5)
+            ->get();
+    }
 }

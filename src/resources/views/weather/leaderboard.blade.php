@@ -10,87 +10,69 @@
 
     <style>
         html {
-            background-color: #06111f;
+            background-color: #020817;
         }
 
         body.weather-dashboard {
-            background-color: #06111f;
+            background-color: #020817;
             background-image:
-                linear-gradient(rgba(148, 163, 184, .035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, .035) 1px, transparent 1px),
-                radial-gradient(circle at 10% 10%, rgba(14, 165, 233, .18), transparent 28rem),
-                radial-gradient(circle at 90% 20%, rgba(45, 212, 191, .14), transparent 30rem),
-                linear-gradient(145deg, #06111f 0%, #0b1f35 48%, #071426 100%);
-            background-size: 42px 42px, 42px 42px, auto, auto, auto;
+                linear-gradient(rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(150deg, #020817 0%, #071426 46%, #042f3f 100%);
+            background-size: 48px 48px, 48px 48px, auto;
             color: #e2e8f0;
         }
 
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .045));
-            border: 1px solid rgba(255, 255, 255, .13);
-            box-shadow: 0 24px 70px rgba(2, 8, 23, .28);
-            backdrop-filter: blur(20px);
+            background: linear-gradient(145deg, rgba(15, 23, 42, .84), rgba(15, 23, 42, .54));
+            border: 1px solid rgba(255, 255, 255, .10);
+            box-shadow: 0 22px 60px rgba(2, 8, 23, .34);
+            backdrop-filter: blur(18px);
         }
     </style>
 </head>
 <body class="weather-dashboard min-h-screen text-slate-100 antialiased" x-data="{ mobileMenuOpen: false }">
     <!-- Modern Navbar -->
-    <nav class="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
-            <div class="glass-panel flex h-16 items-center justify-between gap-4 rounded-full px-4 sm:h-[70px] sm:px-6 lg:gap-8 lg:px-8">
-                
-                <!-- Logo Section -->
-                <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-teal-400 shadow-lg shadow-cyan-950/40 sm:h-11 sm:w-11">
-                        <x-heroicon-o-cloud class="h-6 w-6 text-slate-950 sm:h-7 sm:w-7" />
+    <nav class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+        <div class="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <a href="/" class="flex min-w-0 items-center gap-3">
+                <div class="flex h-9 w-9 flex-none items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/40">
+                    <x-heroicon-o-cloud class="h-5 w-5" />
+                </div>
+                <span class="truncate text-lg font-black text-white">WeatherInsight</span>
+            </a>
+
+            <div class="hidden h-full items-center gap-7 lg:flex">
+                <a href="/" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Dashboard</a>
+                <a href="/comparison" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Comparison</a>
+                <a href="/leaderboard" class="relative flex h-full items-center text-sm font-bold text-white">
+                    Leaderboard
+                    <span class="absolute bottom-0 left-0 h-0.5 w-full bg-cyan-400"></span>
+                </a>
+                <a href="/history" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">History</a>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                @livewire('temperature-toggle')
+
+                <div class="hidden items-center gap-2 sm:flex">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-sm font-bold text-slate-300">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
-                    <div class="hidden sm:block">
-                        <h1 class="text-lg font-black tracking-tight text-white lg:text-xl">WeatherInsight</h1>
-                    </div>
+                    <span class="hidden max-w-24 truncate text-sm font-bold text-white xl:block">{{ auth()->user()->name }}</span>
                 </div>
 
-                <!-- Desktop Navigation Menu -->
-                <div class="hidden items-center gap-1 lg:flex">
-                    <a href="/" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Dashboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/comparison" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Comparison</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/leaderboard" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
-                        <span>Leaderboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/history" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>History</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                </div>
-
-                <!-- Right Section: Search & User -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <!-- User Info (Hidden on mobile) -->
-                    <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-3 py-2 sm:flex lg:px-4">
-                        <x-heroicon-o-user-circle class="h-5 w-5 text-cyan-300" />
-                        <span class="text-sm font-semibold text-white">{{ auth()->user()->name }}</span>
-                    </div>
-
-                    <!-- Logout Button (Hidden on mobile) -->
-                    <form method="POST" action="/logout" class="hidden sm:block">
-                        @csrf
-                        <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
-                            <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
-                        </button>
-                    </form>
-
-                    <!-- Mobile Menu Button -->
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/25 text-white transition hover:bg-slate-950/40 lg:hidden">
-                        <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
-                        <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+                <form method="POST" action="/logout" class="hidden sm:block">
+                    @csrf
+                    <button type="submit" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-slate-300 transition hover:border-rose-400/50 hover:text-rose-300" title="Logout">
+                        <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
                     </button>
-                </div>
+                </form>
+
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-white transition hover:border-cyan-400 lg:hidden" title="Menu">
+                    <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
+                    <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+                </button>
             </div>
         </div>
     </nav>
@@ -105,7 +87,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-1"
-         class="fixed inset-x-0 top-20 z-40 px-4 sm:top-[88px] sm:px-6 lg:hidden">
+         class="fixed inset-x-0 top-20 z-40 px-4 sm:px-6 lg:hidden">
         <div class="glass-panel mx-auto max-w-7xl overflow-hidden rounded-3xl">
             <div class="flex flex-col p-4">
                 <!-- Mobile User Info -->
@@ -145,7 +127,8 @@
         </div>
     </div>
 
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8">
+        <!-- Header Section -->
         <!-- Header Section -->
         <div class="mb-8">
             <div class="flex items-center gap-3 mb-3">
@@ -161,11 +144,153 @@
 
         <!-- Leaderboard Content -->
         <main class="space-y-6">
-            <x-weather.leaderboard :leaderboards="$leaderboards" />
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                {{-- Hottest Cities --}}
+                <div class="glass-panel rounded-xl p-4">
+                    <div class="mb-4 flex items-center gap-3">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500/20">
+                            <x-heroicon-o-fire class="h-5 w-5 text-orange-300" />
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">5 Kota Terpanas</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-400">
+                            <thead class="bg-slate-900/50 text-xs uppercase">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Rank</th>
+                                    <th scope="col" class="px-4 py-3">City</th>
+                                    <th scope="col" class="px-4 py-3">Temp (°C)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($hottestCities as $city)
+                                    <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-3 font-medium text-white">
+                                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-cyan-500 text-white text-xs font-bold">
+                                                {{ $loop->iteration }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 flex items-center gap-2">
+                                            <img src="https://openweathermap.org/img/wn/{{ $city->weather_icon }}@2x.png" alt="{{ $city->weather_description }}" class="h-6 w-6">
+                                            {{ $city->city }}
+                                        </td>
+                                        <td class="px-4 py-3">{{ number_format($city->temperature, 1) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Coldest Cities --}}
+                <div class="glass-panel rounded-xl p-4">
+                    <div class="mb-4 flex items-center gap-3">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/20">
+                            <x-heroicon-o-arrow-trending-down class="h-5 w-5 text-blue-300" />
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">5 Kota Terdingin</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-400">
+                            <thead class="bg-slate-900/50 text-xs uppercase">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Rank</th>
+                                    <th scope="col" class="px-4 py-3">City</th>
+                                    <th scope="col" class="px-4 py-3">Temp (°C)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($coldestCities as $city)
+                                    <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-3 font-medium text-white">
+                                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-cyan-500 text-white text-xs font-bold">
+                                                {{ $loop->iteration }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 flex items-center gap-2">
+                                            <img src="https://openweathermap.org/img/wn/{{ $city->weather_icon }}@2x.png" alt="{{ $city->weather_description }}" class="h-6 w-6">
+                                            {{ $city->city }}
+                                        </td>
+                                        <td class="px-4 py-3">{{ number_format($city->temperature, 1) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Most Humid Cities --}}
+                <div class="glass-panel rounded-xl p-4">
+                    <div class="mb-4 flex items-center gap-3">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-sky-500/20">
+                            <x-heroicon-o-beaker class="h-5 w-5 text-sky-300" />
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">5 Kota Terlembab</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-400">
+                            <thead class="bg-slate-900/50 text-xs uppercase">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Rank</th>
+                                    <th scope="col" class="px-4 py-3">City</th>
+                                    <th scope="col" class="px-4 py-3">Humidity (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($mostHumidCities as $city)
+                                    <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-3 font-medium text-white">
+                                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-cyan-500 text-white text-xs font-bold">
+                                                {{ $loop->iteration }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3">{{ $city->city }}</td>
+                                        <td class="px-4 py-3">{{ $city->humidity }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Windiest Cities --}}
+                <div class="glass-panel rounded-xl p-4">
+                    <div class="mb-4 flex items-center gap-3">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-500/20">
+                            <x-heroicon-o-bolt class="h-5 w-5 text-teal-300" />
+                        </div>
+                        <h2 class="text-lg font-semibold text-white">5 Kota Angin Terkencang</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-400">
+                            <thead class="bg-slate-900/50 text-xs uppercase">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Rank</th>
+                                    <th scope="col" class="px-4 py-3">City</th>
+                                    <th scope="col" class="px-4 py-3">Wind Speed (m/s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($windiestCities as $city)
+                                    <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-3 font-medium text-white">
+                                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-cyan-500 text-white text-xs font-bold">
+                                                {{ $loop->iteration }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3">{{ $city->city }}</td>
+                                        <td class="px-4 py-3">{{ number_format($city->wind_speed, 1) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
 
-        <footer class="py-10 text-center text-xs font-semibold uppercase tracking-[0.25em] text-slate-600">
-            Weather Intelligence Monitoring System
+        <footer class="py-8 text-center text-sm text-slate-500">
+            &copy; {{ now()->year }} WeatherInsight. All rights reserved.
         </footer>
     </div>
 </body>

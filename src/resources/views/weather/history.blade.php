@@ -13,26 +13,24 @@
     <style>
         [x-cloak] { display: none !important; }
         html {
-            background-color: #06111f;
+            background-color: #020817;
         }
 
         body.weather-dashboard {
-            background-color: #06111f;
+            background-color: #020817;
             background-image:
-                linear-gradient(rgba(148, 163, 184, .035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, .035) 1px, transparent 1px),
-                radial-gradient(circle at 10% 10%, rgba(14, 165, 233, .18), transparent 28rem),
-                radial-gradient(circle at 90% 20%, rgba(45, 212, 191, .14), transparent 30rem),
-                linear-gradient(145deg, #06111f 0%, #0b1f35 48%, #071426 100%);
-            background-size: 42px 42px, 42px 42px, auto, auto, auto;
+                linear-gradient(rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(150deg, #020817 0%, #071426 46%, #042f3f 100%);
+            background-size: 48px 48px, 48px 48px, auto;
             color: #e2e8f0;
         }
 
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .045));
-            border: 1px solid rgba(255, 255, 255, .13);
-            box-shadow: 0 24px 70px rgba(2, 8, 23, .28);
-            backdrop-filter: blur(20px);
+            background: linear-gradient(145deg, rgba(15, 23, 42, .84), rgba(15, 23, 42, .54));
+            border: 1px solid rgba(255, 255, 255, .10);
+            box-shadow: 0 22px 60px rgba(2, 8, 23, .34);
+            backdrop-filter: blur(18px);
         }
     </style>
 </head>
@@ -193,47 +191,47 @@
         </form>
 
         <!-- History Table -->
-        <main class="glass-panel overflow-hidden rounded-3xl">
+        <div class="glass-panel rounded-xl p-4 mt-6">
             <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="sticky top-0 border-b border-white/10 bg-slate-950/60 backdrop-blur-sm">
+                <table class="w-full text-left text-sm text-slate-400">
+                    <thead class="bg-slate-900/50 text-xs uppercase">
                         <tr>
-                            <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-400 sm:px-6">Date & Time</th>
-                            <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-400 sm:px-6">City</th>
-                            <th class="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 sm:px-6">Temp</th>
-                            <th class="hidden px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 sm:table-cell sm:px-6">Humidity</th>
-                            <th class="hidden px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 md:table-cell md:px-6">Pressure</th>
-                            <th class="hidden px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 lg:table-cell lg:px-6">Wind</th>
-                            <th class="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-400 sm:px-6">Risk</th>
-                            <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-400 sm:px-6">Weather</th>
+                            <th scope="col" class="px-4 py-3">Date & Time</th>
+                            <th scope="col" class="px-4 py-3">City</th>
+                            <th scope="col" class="px-4 py-3 text-right">Temp</th>
+                            <th scope="col" class="hidden px-4 py-3 text-right sm:table-cell">Humidity</th>
+                            <th scope="col" class="hidden px-4 py-3 text-right md:table-cell">Pressure</th>
+                            <th scope="col" class="hidden px-4 py-3 text-right lg:table-cell">Wind</th>
+                            <th scope="col" class="px-4 py-3 text-center">Risk</th>
+                            <th scope="col" class="px-4 py-3">Weather</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
                         @forelse($history as $record)
                             <tr 
                                 @click="selectedRecord = {{ json_encode($record->getModalData()) }}"
-                                class="cursor-pointer transition-colors hover:bg-white/5"
+                                class="border-b border-slate-700/30 cursor-pointer transition-colors hover:bg-slate-700/20"
                             >
-                                <td class="px-4 py-4 text-sm font-medium text-slate-300 sm:px-6">
+                                <td class="px-4 py-3 font-medium text-slate-300">
                                     {{ $record->recorded_at->format('d M Y') }}<br>
                                     <span class="text-xs text-slate-500">{{ $record->recorded_at->format('H:i') }}</span>
                                 </td>
-                                <td class="px-4 py-4 text-sm font-semibold text-white sm:px-6">
-                                    {{ $record->city }}
+                                <td class="px-4 py-3 font-semibold text-white">
+                                    {{ Str::title($record->city) }}
                                 </td>
-                                <td class="px-4 py-4 text-right text-sm font-bold text-white sm:px-6">
+                                <td class="px-4 py-3 text-right font-bold text-white">
                                     {{ number_format($record->temperature, 1) }}°C
                                 </td>
-                                <td class="hidden px-4 py-4 text-right text-sm font-medium text-slate-300 sm:table-cell sm:px-6">
+                                <td class="hidden px-4 py-3 text-right font-medium text-slate-300 sm:table-cell">
                                     {{ $record->humidity }}%
                                 </td>
-                                <td class="hidden px-4 py-4 text-right text-sm font-medium text-slate-300 md:table-cell md:px-6">
+                                <td class="hidden px-4 py-3 text-right font-medium text-slate-300 md:table-cell">
                                     {{ number_format($record->pressure, 0) }} hPa
                                 </td>
-                                <td class="hidden px-4 py-4 text-right text-sm font-medium text-slate-300 lg:table-cell lg:px-6">
+                                <td class="hidden px-4 py-3 text-right font-medium text-slate-300 lg:table-cell">
                                     {{ number_format($record->wind_speed, 1) }} m/s
                                 </td>
-                                <td class="px-4 py-4 text-center sm:px-6">
+                                <td class="px-4 py-3 text-center">
                                     @php
                                         $riskColors = [
                                             'low' => 'bg-emerald-400/10 text-emerald-300',
@@ -245,14 +243,14 @@
                                         $riskLabel = $riskCategory?->name ?? ucfirst($riskLevel).' Risk';
                                         $riskColor = $riskColors[$riskLevel] ?? 'bg-slate-400/10 text-slate-300';
                                     @endphp
-                                    <div>
+                                    <div class="flex flex-col items-center">
                                         <p class="text-sm font-black text-white">{{ $riskLabel }}</p>
                                         <span class="inline-flex mt-1 rounded-full px-2 py-1 text-xs font-bold uppercase {{ $riskColor }}">
                                             {{ strtoupper($riskLevel) }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 sm:px-6">
+                                <td class="px-4 py-3">
                                     <div class="flex items-center gap-2">
                                         <img 
                                             src="https://openweathermap.org/img/wn/{{ $record->weather_icon }}@2x.png" 

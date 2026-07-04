@@ -60,10 +60,6 @@ class WeatherSnapshotService
             'recorded_at' => now(),
         ]);
 
-        // Dynamically add sunrise and sunset to the object without saving to DB
-        $weather->sunrise = data_get($data, 'sys.sunrise');
-        $weather->sunset = data_get($data, 'sys.sunset');
-
         $analysis = $this->ruleEngine->analyze($weather);
 
         $weather->update([
