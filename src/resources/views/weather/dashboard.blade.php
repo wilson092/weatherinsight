@@ -255,21 +255,6 @@
             <div class="flex items-center gap-2 sm:gap-3">
                 @livewire('temperature-toggle')
 
-                <form method="GET" action="/" class="relative hidden md:block">
-                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        name="city"
-                        value="{{ request('city', 'Jakarta') }}"
-                        placeholder="Search city..."
-                        class="h-10 w-48 rounded-full border border-white/10 bg-slate-900/70 pl-10 pr-10 text-sm text-white placeholder:text-slate-500 transition focus:w-64 focus:border-cyan-400 focus:ring-cyan-400"
-                    >
-                    <button type="submit" class="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-cyan-400 hover:text-slate-950" title="Search">
-                        <x-heroicon-o-magnifying-glass class="h-4 w-4" />
-                    </button>
-                </form>
-
-
                 <div class="hidden items-center gap-2 sm:flex">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-sm font-bold text-slate-300">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -305,18 +290,6 @@
          class="fixed inset-x-0 top-20 z-40 px-4 sm:px-6 lg:hidden">
         <div class="glass-panel mx-auto max-w-7xl overflow-hidden rounded-3xl">
             <div class="flex flex-col p-4">
-                <!-- Mobile Search -->
-                <form method="GET" action="/" class="relative mb-4 md:hidden">
-                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        name="city"
-                        value="{{ request('city', 'Jakarta') }}"
-                        placeholder="Search city..."
-                        class="w-full rounded-full border border-white/10 bg-slate-950/40 py-2 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
-                    >
-                </form>
-
                 <!-- Mobile User Info -->
                 <div class="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:hidden">
                     <x-heroicon-o-user-circle class="h-6 w-6 text-cyan-300" />
@@ -365,6 +338,20 @@
                 <strong class="font-semibold text-white">{{ $latest?->recorded_at?->format('d M Y, H:i') ?? 'Unavailable' }}</strong>
             </div>
         </div>
+
+        <!-- Full-width Search Bar -->
+        <form method="GET" action="/" class="relative mb-5 flex items-center gap-2">
+            <input
+                type="text"
+                name="city"
+                value="{{ request('city', 'Jakarta') }}"
+                placeholder="Cari kota..."
+                class="h-12 flex-grow rounded-full border border-white/10 bg-slate-900/70 px-6 text-base text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50"
+            >
+            <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-400 text-slate-950 transition hover:bg-cyan-300" title="Search">
+                <x-heroicon-o-magnifying-glass class="h-6 w-6" />
+            </button>
+        </form>
 
         <!-- Day Tabs -->
         <div class="mb-5">

@@ -42,7 +42,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="relative flex flex-1 flex-col justify-between p-5 text-white">
+        <div class="relative flex flex-1 flex-col p-5 text-white">
             <!-- Top Info -->
             <div class="flex items-start justify-between">
                 <div>
@@ -58,18 +58,30 @@
                 @endif
             </div>
 
-            <!-- Center Info -->
-            <div class="my-4">
-                <div class="flex items-center gap-4">
+            <!-- Center Info (Redesigned) -->
+            <div class="flex-1 flex flex-col justify-center my-2">
+                <div class="flex items-center gap-2">
                     <img
                         src="https://openweathermap.org/img/wn/{{ $displayData['icon'] }}@4x.png"
                         alt="{{ $displayData['description'] }}"
-                        class="-ml-4 h-28 w-28"
+                        class="-ml-4 h-32 w-32"
                     >
-                    <div>
-                        <p class="text-6xl font-bold">
-                            {{ round($this->getConvertedTemperature($displayData['temp'])) }}°
-                        </p>
+                    <div class="flex-1">
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-6xl font-bold">
+                                {{ round($this->getConvertedTemperature($displayData['temp'])) }}°
+                            </p>
+                            @if($isToday && $latest->risk_level)
+                                <span @class([
+                                    'rounded-full px-2 py-0.5 text-xs font-semibold',
+                                    'bg-green-500/20 text-green-300' => $latest->risk_level === 'Rendah',
+                                    'bg-yellow-500/20 text-yellow-300' => $latest->risk_level === 'Sedang',
+                                    'bg-red-500/20 text-red-300' => $latest->risk_level === 'Tinggi',
+                                ])>
+                                    {{ $latest->risk_level }}
+                                </span>
+                            @endif
+                        </div>
                         <p class="text-lg font-semibold capitalize text-slate-200">
                             {{ $displayData['description'] }}
                         </p>
@@ -80,17 +92,22 @@
                         @endif
                     </div>
                 </div>
+
+                @if($isToday && $latest->insight)
+                <div class="mt-4 border-t border-slate-700/50 pt-3">
+                    <p class="text-sm text-slate-400">{{ $latest->insight }}</p>
+                </div>
+                @endif
             </div>
         </div>
 
-        <!-- Bottom Details Grid -->
-        <div class="relative grid grid-cols-2 gap-px border-t border-white/10 bg-slate-900/50 p-4 sm:grid-cols-2">
+        <!-- Bottom Details Grid (Redesigned) -->
+        <div class="relative grid grid-cols-3 gap-px border-t border-white/10 bg-slate-900/50 p-4">
             @php
                 $details = [
                     ['icon' => 'heroicon-o-beaker', 'label' => 'Humidity', 'value' => is_numeric($displayData['humidity']) ? $displayData['humidity'] . '%' : 'N/A'],
                     ['icon' => 'heroicon-o-arrow-down-on-square', 'label' => 'Pressure', 'value' => is_numeric($displayData['pressure']) ? $displayData['pressure'] . ' hPa' : 'N/A'],
                     ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? round($displayData['wind_speed']) . ' km/h' : 'N/A'],
-                    ['icon' => 'heroicon-o-eye', 'label' => 'Visibility', 'value' => is_numeric($displayData['visibility']) ? ($displayData['visibility'] / 1000) . ' km' : 'N/A'],
                 ];
             @endphp
 
