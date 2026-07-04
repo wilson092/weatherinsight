@@ -11,9 +11,10 @@ class ForecastParserService
      * Parse the raw forecast API response into structured daily and hourly forecasts.
      *
      * @param array $apiResponse The raw response from OpenWeather's /forecast endpoint.
+     * @param int $timezoneOffset The timezone offset in seconds from UTC.
      * @return array An array containing 'daily' and 'hourly' forecasts.
      */
-    public function parse(array $apiResponse): array
+    public function parse(array $apiResponse, int $timezoneOffset = 0): array
     {
         $list = data_get($apiResponse, 'list', []);
 
@@ -25,44 +26,59 @@ class ForecastParserService
         }
 
         return [
-            'daily' => $this->parseDailyForecast($list),
-            'hourly' => $this->parseHourlyForecast($list),
+            'daily' => $this->parseDailyForecast($list, $timezoneOffset),
+            'hourly' => $this->parseHourlyForecast($list, $timezoneOffset),
         ];
     }
 
     /**
-     * Extracts the hourly forecast for the next 24 hours.
+     * Extracts a rolling 24-hour forecast, adjusted for the local timezone.
      *
      * @param array $list The 'list' array from the API response.
+     * @param int $timezoneOffset The timezone offset in seconds.
      * @return array The extracted hourly forecast data.
      */
-    private function parseHourlyForecast(array $list): array
+    private function parseHourlyForecast(array $list, int $timezoneOffset): array
     {
-        // Take the first 8 items (3-hour intervals for 24 hours)
-        return array_slice($list, 0, 8);
+        $now = Carbon::now()->timestamp;
+
+        return collect($list)
+            // Filter for items that are in the future
+            ->filter(fn ($item) => $item['dt'] >= $now)
+            // Add the local timestamp
+            ->map(function ($item) use ($timezoneOffset) {
+                $item['local_dt'] = $item['dt'] + $timezoneOffset;
+                return $item;
+            })
+            // Take the first 8 items for the next 24 hours
+            ->take(8)
+            ->values()
+            ->all();
     }
 
     /**
-     * Groups the 5-day forecast data by day and calculates min/max temperatures.
+     * Groups the 5-day forecast data by day, adjusted for local timezone.
      *
      * @param array $list The 'list' array from the API response.
+     * @param int $timezoneOffset The timezone offset in seconds.
      * @return array The structured daily forecast data.
      */
-    private function parseDailyForecast(array $list): array
+    private function parseDailyForecast(array $list, int $timezoneOffset): array
     {
         return collect($list)
-            ->groupBy(function ($item) {
-                return Carbon::parse($item['dt_txt'])->format('Y-m-d');
+            ->groupBy(function ($item) use ($timezoneOffset) {
+                // Group by the local date
+                return Carbon::createFromTimestamp($item['dt'] + $timezoneOffset)->format('Y-m-d');
             })
-            ->map(function (Collection $dayItems) {
-                // Use the item around midday for the representative weather icon and description
-                $representativeItem = $dayItems->first(function ($item) {
-                    $hour = Carbon::parse($item['dt_txt'])->hour;
-                    return $hour >= 11 && $hour <= 13;
+            ->map(function (Collection $dayItems) use ($timezoneOffset) {
+                // Use the item around midday (local time) for the representative weather icon
+                $representativeItem = $dayItems->first(function ($item) use ($timezoneOffset) {
+                    $localHour = Carbon::createFromTimestamp($item['dt'] + $timezoneOffset)->hour;
+                    return $localHour >= 11 && $localHour <= 13;
                 }) ?? $dayItems->first();
 
                 return [
-                    'dt' => Carbon::parse($dayItems->first()['dt_txt'])->timestamp,
+                    'dt' => Carbon::createFromTimestamp($dayItems->first()['dt'] + $timezoneOffset)->startOfDay()->timestamp,
                     'temp' => [
                         'min' => $dayItems->min('main.temp_min'),
                         'max' => $dayItems->max('main.temp_max'),

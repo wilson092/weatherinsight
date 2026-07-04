@@ -31,7 +31,7 @@ class WeatherDashboardController extends Controller
 
         // Fetch and parse forecast
         $rawForecast = $openWeather->forecast($city);
-        $forecast = $forecastParser->parse($rawForecast);
+        $forecast = $forecastParser->parse($rawForecast, $latest->timezone ?? 0);
 
         // HISTORY
         $history = WeatherHistory::where('city', $city)

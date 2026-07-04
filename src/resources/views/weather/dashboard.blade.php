@@ -362,7 +362,7 @@
             <!-- Top Section: Today's Detail + Hourly Forecast -->
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-[1fr_1.2fr]">
                 @livewire('today-detail', ['latest' => $latest])
-                <x-weather.hourly-forecast :forecast="$forecast" />
+                @livewire('hourly-forecast', ['forecast' => $forecast])
             </div>
 
             <!-- Middle Section: Full-width Map -->

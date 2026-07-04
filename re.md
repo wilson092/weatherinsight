@@ -1,59 +1,57 @@
-markdown# Prompt: Redesign Card Cuaca Mengikuti Referensi Clean (Tanpa UV Index, Tanpa Insight)
+# Prompt: Fix Bug Timezone Hourly Forecast & Bug Toggle °C/°F Tidak Konsisten
 
 ## Konteks
-Referensi desain card cuaca yang diinginkan sudah ada diterapkan ke card "Current Day Detail" di dashboard saat ini (`current-dashboard.png` terlampir). **UV Index tidak perlu diimplementasikan** (karena butuh One Call API 3.0 yang tidak tersedia di plan saat ini) — footer cukup Sunrise & Sunset saja. Card juga masih menampilkan teks paragraf komentar/insight yang **harus dihapus total**.
+Dashboard menampilkan 2 bug nyata di section "Hourly Forecast" (screenshot `current-dashboard.png` terlampir):
 
-## Struktur Card Baru (Ikuti Referensi)
+1. **Data jam tidak masuk akal** — misal jam "06:00" menampilkan suhu 37°C, padahal itu adalah suhu yang wajar untuk siang hari (jam 12:00-15:00), bukan jam 6 pagi. Ini indikasi kuat bahwa data dari OpenWeather API (yang dikembalikan dalam **UTC**) belum dikonversi dengan benar ke timezone lokal kota (WIB / UTC+7 untuk Jakarta), atau konversi timezone-nya terbalik/dobel.
+2. **Toggle °C/°F tidak konsisten** — saat diubah ke Fahrenheit, card cuaca utama dan tab hari (Today/Sat/Sun/dst) berubah unit dengan benar, tapi **Hourly Forecast tetap menampilkan Celsius**, tidak ikut berubah.
 
-### 1. Header
-- Nama hari besar ("Saturday") + tanggal kecil di bawahnya ("04 Jul 2026") di kiri.
-- Jam saat ini ("20:41") di kanan atas.
+## A. Fix Timezone Hourly Forecast (WAJIB)
 
-### 2. Blok Utama: 2 Kolom dengan Divider Vertikal
+### Root Cause yang Harus Dicek
+- Response dari `/data/2.5/forecast` mengembalikan field `dt` (Unix timestamp UTC) dan `dt_txt` (string UTC, contoh "2026-07-04 06:00:00" — ini WAKTU UTC, BUKAN waktu lokal).
+- Response juga mengembalikan field `city.timezone` (offset dalam detik dari UTC, contoh untuk Jakarta = 25200 detik = +7 jam).
+- **Bug kemungkinan besar**: sistem saat ini menampilkan `dt_txt` APA ADANYA (masih UTC) sebagai jam lokal, tanpa menambahkan offset `city.timezone`. Ini menyebabkan semua jam bergeser 7 jam dari yang seharusnya (WIB), sehingga data siang hari (suhu tinggi) tertampil seolah-olah jam pagi.
 
-**Kolom Kiri:**
-- Ikon cuaca besar (perbesar signifikan dari ukuran saat ini, ~120-140px).
-- Suhu besar ("30°") + badge kategori kecil di sampingnya (contoh: "Low" — pastikan Title Case, bukan "low" huruf kecil).
-- Deskripsi cuaca di bawahnya ("Scattered Clouds").
-- **HAPUS teks paragraf insight/komentar** yang saat ini muncul — sudah beberapa kali diminta dihapus, pastikan benar-benar hilang dan tidak muncul lagi di card ini.
+### Perbaikan yang Harus Dilakukan
+- Ambil `city.timezone` (offset detik) dari response API untuk kota yang sedang ditampilkan.
+- Untuk SETIAP item forecast, konversi timestamp dari UTC ke waktu lokal: `local_time = dt (UTC) + timezone_offset`.
+- Gunakan hasil konversi ini untuk SEMUA tampilan jam di Hourly Forecast (label jam di chart, label jam di card per-slot, label jam di sumbu grafik).
+- Pastikan konversi ini konsisten dengan jam yang ditampilkan di card utama ("Saturday, 04 Jul 2026 — 20:55") dan di popup Weather Map — semua harus merujuk ke waktu lokal kota yang sama, tidak boleh campur UTC dan lokal.
+- **Test verifikasi**: cek manual — jika sekarang jam lokal Jakarta adalah 20:55 WIB, maka slot pertama di Hourly Forecast harus mulai dari jam terdekat setelah 20:55 (misal 21:00), BUKAN mulai dari jam yang jauh berbeda seperti sekarang.
 
-**Kolom Kanan** (dipisahkan garis vertikal tipis `border-l border-slate-700/50`):
-- Humidity — ikon tetes air + persen, dengan divider horizontal tipis di bawahnya.
-- Pressure — ikon gauge + nilai hPa, dengan divider horizontal tipis di bawahnya.
-- Wind — ikon angin + kecepatan km/h.
-- (Visibility tetap dihapus, tidak perlu dikembalikan.)
+## B. Ubah Rentang Hourly Forecast Jadi Rolling 24 Jam dari Waktu Sekarang
 
-### 3. Footer: Sunrise & Sunset Saja (2 Kolom, Tanpa UV Index)
-Tambahkan baris footer di bagian bawah card, dipisahkan garis horizontal (`border-t border-slate-700/50`), berisi 2 kolom sejajar dengan divider vertikal tipis di antaranya:
-- **Sunrise** — ikon matahari terbit + jam (format "05:52").
-- **Sunset** — ikon matahari terbenam + jam (format "17:55").
-- Karena hanya 2 item (bukan 3 seperti referensi asli), atur lebar kolom agar tetap seimbang secara visual (masing-masing 50% lebar, atau beri padding horizontal lebih agar tidak terlihat renggang di tengah).
+- Rentang tampilan Hourly Forecast harus **rolling 24 jam ke depan dari jam saat ini** (real-time), bukan fix dari tengah malam ke tengah malam.
+- Contoh: jika sekarang jam lokal 21:00 (hari ini), maka Hourly Forecast menampilkan slot mulai ~21:00/22:00 hari ini sampai ~21:00/22:00 besok (24 jam ke depan, mengikuti interval data yang tersedia dari API — interval 3 jam untuk endpoint `/forecast`).
+- Pastikan ini konsisten setiap kali halaman di-refresh atau kota diganti — selalu dihitung ulang berdasarkan waktu saat request dilakukan (real "now" di timezone lokal kota tersebut), bukan hardcoded ke jam tertentu.
 
-## Ketentuan Data & Teknis
+## C. Fix Toggle °C/°F Tidak Berlaku di Hourly Forecast (WAJIB)
 
-### Sunrise & Sunset
-- Ambil dari field `sys.sunrise` dan `sys.sunset` di response `/data/2.5/weather` (endpoint current weather).
-- Field berupa Unix timestamp — konversi ke jam lokal sesuai timezone kota (`timezone` offset dari response yang sama), format tampilan "HH:mm".
-- Field ini gratis dan selalu tersedia, wajib diimplementasikan.
+### Root Cause yang Harus Dicek
+- Kemungkinan komponen Hourly Forecast menyimpan/menampilkan nilai suhu dari variabel/state yang terpisah dari komponen current weather & tab hari, sehingga tidak ikut ter-update saat toggle unit berubah.
+- Atau: konversi suhu (Celsius → Fahrenheit) dilakukan di satu tempat (misal saat fetch data awal) alih-alih dihitung ulang secara reaktif setiap kali unit toggle berubah.
 
-### UV Index
-- **TIDAK PERLU diimplementasikan.** Jangan tambahkan field ini di card, jangan buat placeholder/dummy untuk ini.
+### Perbaikan yang Harus Dilakukan
+- Pastikan SEMUA komponen yang menampilkan suhu (Current Weather card, Day Tabs, Hourly Forecast, 5-Day/Weather Map popup jika ada) membaca dari **satu sumber state unit yang sama** (misal Livewire property `$unit` atau Alpine store global), bukan state lokal per-komponen yang terpisah.
+- Konversi suhu (`celsiusToFahrenheit()`) harus dilakukan secara reaktif di level tampilan (computed property/getter), bukan disimpan sebagai nilai statis saat data pertama kali di-fetch — supaya begitu toggle diklik, SEMUA tempat yang menampilkan suhu langsung ikut berubah tanpa perlu re-fetch data dari API.
+- Test: toggle ke Fahrenheit → refresh visual → pastikan Card Cuaca Utama, Day Tabs, DAN Hourly Forecast (baik grafik garis maupun angka di tiap slot card) semuanya berubah ke Fahrenheit secara bersamaan.
 
-## Bug yang Harus Diperbaiki Bersamaan
-- **Hapus teks insight/komentar** dari card cuaca secara permanen — cek ulang logic yang menampilkannya, pastikan tidak ada kondisi yang secara otomatis merender teks ini lagi.
-- **Fix kapitalisasi badge kategori**: "low" → "Low" (Title Case), pastikan konsisten untuk semua kategori (Normal, Rendah, Tinggi, dst).
+## Ketentuan Teknis
+- Jangan ubah endpoint API (`/data/2.5/forecast` tetap dipakai).
+- Buat helper/utility function terpusat untuk konversi timezone (`convertUtcToLocal($timestamp, $timezoneOffset)`) dan konversi suhu (`convertTemperature($celsius, $unit)`), pakai di semua tempat yang butuh, jangan duplikat logic berbeda-beda di tiap komponen.
+- Pastikan perubahan ini tidak merusak fitur lain yang sudah stabil (Weather Map, Weather Risk Assessment, Weather Alert Center, Weather Recommendation, Day Tabs).
 
 ## Deliverable
-- Redesign card cuaca: header, 2 kolom (ikon+suhu+badge+deskripsi | Humidity+Pressure+Wind), footer Sunrise & Sunset saja.
-- Hapus teks insight/komentar dari card ini secara permanen.
-- Fix kapitalisasi badge kategori.
-- Screenshot hasil akhir untuk verifikasi.
+- Fix konversi timezone di Hourly Forecast — jam yang ditampilkan harus waktu lokal yang benar, bukan UTC mentah.
+- Ubah Hourly Forecast jadi rolling 24 jam dari waktu sekarang (real-time), bukan rentang statis.
+- Fix toggle °C/°F agar berlaku di SEMUA komponen termasuk Hourly Forecast.
+- Screenshot hasil akhir untuk verifikasi (termasuk screenshot setelah toggle ke Fahrenheit, pastikan semua section berubah unit).
 
 ## Checklist Verifikasi
-- [ ] Card cuaca TIDAK ADA teks paragraf komentar/insight apapun.
-- [ ] Badge kategori tampil Title Case ("Low", bukan "low").
-- [ ] Layout 2 kolom dengan divider vertikal: kiri (ikon besar+suhu+badge+deskripsi), kanan (Humidity, Pressure, Wind).
-- [ ] Footer menampilkan Sunrise & Sunset dengan jam yang benar dan proporsional (2 kolom, bukan 3).
-- [ ] UV Index TIDAK muncul di manapun pada card ini.
-- [ ] Visibility tetap tidak muncul.
-- [ ] Test di minimal 2 kota berbeda untuk memastikan Sunrise/Sunset berubah sesuai
+- [ ] Jam di Hourly Forecast sudah dikonversi ke waktu lokal (WIB untuk Jakarta), tidak lagi UTC mentah.
+- [ ] Suhu di setiap jam sekarang masuk akal secara logis (siang hari lebih panas dari malam/dini hari, sesuai pola cuaca normal).
+- [ ] Hourly Forecast menampilkan rolling 24 jam dari waktu sekarang (bukan fix 00:00-00:00), dan slot pertama dekat dengan jam saat ini.
+- [ ] Toggle °C/°F mengubah SEMUA tampilan suhu sekaligus: Current Weather, Day Tabs, DAN Hourly Forecast (grafik + card per-jam).
+- [ ] Test dengan minimal 2 kota berbeda timezone (jika ada, misal WIB vs WITA/WIT) untuk memastikan konversi timezone benar-benar dinamis, bukan hardcoded +7 untuk semua kota.
+- [ ] Fitur lain (Weather Map, Risk Assessment, Alert Center, Recommendation) tetap berfungsi normal, tidak terdampak perubahan ini.
