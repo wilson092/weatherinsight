@@ -64,6 +64,26 @@ class TodayDetail extends Component
         return $temp;
     }
 
+    public function formatUtcOffset(int $offsetInSeconds): string
+    {
+        $sign = $offsetInSeconds >= 0 ? '+' : '-';
+        $absOffset = abs($offsetInSeconds);
+        $hours = floor($absOffset / 3600);
+        $minutes = floor(($absOffset % 3600) / 60);
+
+        return sprintf('UTC%s%02d:%02d', $sign, $hours, $minutes);
+    }
+
+    public function getCarbonTimezoneString(int $offsetInSeconds): string
+    {
+        $sign = $offsetInSeconds >= 0 ? '+' : '-';
+        $absOffset = abs($offsetInSeconds);
+        $hours = floor($absOffset / 3600);
+        $minutes = floor(($absOffset % 3600) / 60);
+
+        return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
+    }
+
     public function render()
     {
         return view('livewire.today-detail');

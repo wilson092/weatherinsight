@@ -66,8 +66,11 @@
                         {{ \Carbon\Carbon::createFromTimestamp($displayData['dt'])->format('d M Y') }}
                     </p>
                 </div>
-                @if($isToday && $timezoneString)
-                    <span class="text-lg font-semibold text-slate-300">{{ now($timezoneString)->format('H:i') }}</span>
+                @if($isToday && $latest)
+                    <div class="flex flex-col items-end">
+                        <span class="text-lg font-semibold text-slate-300">{{ now($this->getCarbonTimezoneString($latest->timezone))->format('H:i') }}</span>
+                        <span class="text-sm text-slate-400">{{ $this->formatUtcOffset($latest->timezone) }}</span>
+                    </div>
                 @endif
             </div>
 

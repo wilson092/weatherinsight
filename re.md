@@ -1,72 +1,49 @@
-# Prompt 3/3: Restyle Halaman History Mengikuti Tema Dashboard
-
-## ⚠️ BATASAN PENTING
-- **JANGAN membuat migration baru.** Semua data yang dibutuhkan sudah tersedia di tabel `weather_histories`.
-- **JANGAN mengubah konfigurasi Docker** (Dockerfile, docker-compose.yml, environment container). Kerjakan murni di level Blade/Livewire/Tailwind.
-- **PENTING — Halaman yang dimaksud**: "History" adalah **halaman terpisah** yang diakses lewat menu navbar (klik "History", URL `/history`) — **BUKAN** bagian dari Dashboard. Edit HANYA file/route/component untuk halaman History ini.
-- Ini adalah task terakhir dari 3 halaman (Comparison ✅ selesai, Leaderboard ✅ selesai, History — task ini). **JANGAN sentuh file Dashboard, Comparison, atau Leaderboard** yang sudah selesai dikerjakan sebelumnya.
+# Prompt: Tampilkan Timezone & Waktu Lokal di Card Cuaca Dashboard
 
 ## Konteks
-Dashboard, Comparison, dan Leaderboard sudah final dengan tema visual yang konsisten:
-- Card menggunakan `rounded-xl bg-slate-800/50 border border-slate-700/50 p-4` (atau `p-5` untuk card besar).
-- Warna aksen solid cyan (`bg-cyan-500 hover:bg-cyan-600`) untuk tombol utama — BUKAN gradient.
-- Badge kategori risk (Low/Medium/High) pakai bentuk pill/rounded-full dengan warna hijau/kuning/merah.
-- Header section pakai pola: ikon kecil bulat (background berwarna) + judul (font besar, bold, putih) + subtitle kecil abu-abu.
-- Tabel: header `bg-slate-900/50` dengan teks uppercase kecil abu-abu, baris dengan border tipis (`border-b border-slate-700/30`) dan hover effect halus.
+Saat ini card "Current Day Detail" di Dashboard menampilkan tanggal dan jam (misal "Wednesday, 08 Jul 2026" + jam di pojok kanan atas), tapi tidak menampilkan informasi **timezone** kota yang sedang dicari. Saya ingin menambahkan informasi timezone (misal "UTC+7" untuk Jakarta, "UTC+2" untuk Paris — offset ini berubah tergantung kota) beserta waktu lokal kota tersebut, sehingga user tahu persis di zona waktu mana kota itu berada, terutama berguna saat membandingkan kota-kota di timezone berbeda.
 
-Halaman **History** (screenshot `current-history.png` terlampir) SEBENARNYA **sudah cukup dekat** dengan tema ini (card header dengan ikon jam ungu sudah bagus, tabel sudah rapi dengan badge Low Risk yang konsisten). Namun ada beberapa hal yang masih perlu disamakan/dirapikan:
+## Yang Harus Ditambahkan
 
-### Kondisi Saat Ini
-1. Section filter tanggal (input "dd/mm/yyyy" + tombol "Date" cyan solid + tombol refresh kecil ikon panah melingkar di kanan) sudah dibungkus card (`rounded-xl` dengan border), ini SUDAH BAGUS dan konsisten.
-2. Tabel di bawahnya (DATE & TIME, CITY, TEMP, HUMIDITY, PRESSURE, WIND, RISK, WEATHER) TIDAK dibungkus card terpisah — menyatu langsung dengan card filter tanggal di atasnya dalam satu container besar, padahal secara pola Dashboard biasanya tiap section punya card sendiri.
-3. Nama kota di kolom CITY tidak konsisten kapitalisasi — "tel aviv" dan "bandung" huruf kecil semua, sementara "Jakarta" sudah benar Title Case.
-4. Badge "LOW" di kolom RISK terlihat agak menempel rapat dengan teks "Low Risk" di atasnya — perlu sedikit spacing agar lebih rapi.
+### 1. Tampilkan Label Timezone di Card Cuaca
+- Di card "Current Day Detail" (Dashboard), tambahkan label kecil timezone di dekat informasi tanggal/jam yang sudah ada — contoh posisi: di samping atau di bawah jam ("Wednesday, 08 Jul 2026 — 22:22 **(UTC+7)**") atau sebagai elemen kecil terpisah di pojok kanan atas card, berdekatan dengan jam yang sudah ada.
+- Format timezone: "UTC+7" untuk Jakarta (WIB), "UTC+2" untuk Paris (waktu musim panas/CEST) atau "UTC+1" (musim dingin/CET) — format harus dinamis mengikuti offset aktual dari API, BUKAN hardcoded per kota (karena beberapa negara punya daylight saving time yang mengubah offset sepanjang tahun).
 
-## Perubahan yang Diminta
+### 2. Sumber Data Timezone
+- Ambil dari field `timezone` di response `/data/2.5/weather` (endpoint current weather) — field ini berupa **offset dalam detik** dari UTC (contoh: Jakarta = `25200` detik = +7 jam, Paris saat musim panas = `7200` detik = +2 jam).
+- Konversi offset detik ini ke format tampilan "UTC+X" atau "UTC-X":
+offset_jam = timezone_detik / 3600
+format_display = "UTC" + (offset_jam >= 0 ? "+" : "") + offset_jam
+  Contoh: `25200 / 3600 = 7` → tampil "UTC+7". Untuk offset yang bukan kelipatan jam penuh (misal India UTC+5:30), tampilkan dengan format "UTC+5:30" (offset dalam jam:menit, bukan dibulatkan).
 
-### 1. Pisahkan Card Filter Tanggal dan Card Tabel
-- Bungkus tabel history dalam card TERPISAH dari card filter tanggal (`rounded-xl bg-slate-800/50 border border-slate-700/50`), dengan jarak (`mt-6` atau `space-y-6`) di antara keduanya — mengikuti pola pemisahan card section seperti di Dashboard (misal antara card Current Weather dan card Hourly Forecast yang terpisah jelas).
-- Card filter tanggal tetap seperti sekarang (sudah bagus): input date + tombol "Date" solid cyan + tombol refresh.
+### 3. Waktu Lokal yang Sudah Benar (Reuse dari Perbaikan Sebelumnya)
+- Jam yang ditampilkan di card ini (pojok kanan atas, "22:22") **seharusnya sudah** menggunakan waktu lokal kota tersebut (hasil dari perbaikan konversi timezone yang sudah dikerjakan sebelumnya untuk Hourly Forecast) — pastikan konsisten, gunakan helper/service yang sama untuk konversi ini, jangan buat logic terpisah.
+- Verifikasi: waktu yang ditampilkan di card ini HARUS sama persis dengan waktu yang dipakai sebagai acuan "jam sekarang" di Hourly Forecast (rolling 24 jam dari waktu sekarang) — kedua tempat ini harus merujuk ke satu sumber waktu lokal yang konsisten.
 
-### 2. Fix Kapitalisasi Nama Kota
-- Perbaiki tampilan nama kota di kolom CITY agar selalu Title Case: "Tel Aviv" (bukan "tel aviv"), "Bandung" (bukan "bandung"), dst.
-- Gunakan `Str::title()` di level tampilan (Blade), JANGAN mengubah data asli yang tersimpan di database — cukup ubah cara tampilnya saja.
-- Terapkan konsisten untuk SEMUA baris di tabel history, tidak hanya yang terlihat di screenshot saat ini.
-
-### 3. Rapikan Spacing Badge Risk
-- Beri sedikit jarak vertikal (`mt-1` atau `gap-1` dalam flex-col) antara teks "Low Risk"/"Medium Risk"/"High Risk" dan badge pill kecil ("LOW"/"MEDIUM"/"HIGH") di kolom RISK, supaya tidak terlihat menempel.
-
-### 4. Verifikasi Konsistensi Visual Keseluruhan
-- Pastikan warna header tabel (`bg-slate-900/50`), border baris (`border-b border-slate-700/30`), dan hover effect (`hover:bg-slate-700/20`) SUDAH konsisten dengan tabel di Leaderboard yang sudah selesai dikerjakan sebelumnya — jika ada perbedaan kecil, samakan.
-- Pastikan ikon cuaca kecil di kolom WEATHER (ikon awan/matahari/dst) menggunakan set ikon yang sama dengan yang dipakai di Dashboard dan Leaderboard (Heroicons, dengan nama yang sudah diverifikasi valid — jangan menebak nama ikon baru, gunakan ikon yang sudah terbukti bekerja di halaman lain).
+### 4. Terapkan di Semua Tempat yang Relevan
+- Selain card cuaca utama, jika ada tempat lain yang menampilkan waktu kota (misal popup Weather Map), pertimbangkan menambahkan info timezone yang sama di sana juga untuk konsistensi — namun prioritas utama adalah card cuaca Dashboard.
 
 ## Ketentuan Teknis
-- **Hanya ubah file/route/component untuk halaman History** — JANGAN sentuh file Dashboard, Comparison, atau Leaderboard.
-- Tidak perlu query/logic baru — data yang sudah tampil di tabel history (dari `weather_histories`) tetap dipakai apa adanya, ini murni perbaikan tampilan.
-- Jika perlu clear cache setelah perubahan, jalankan SATU PER SATU (bukan digabung `&&` dalam satu baris):
-```bash
-  docker compose exec php php artisan view:clear
-```
-```bash
-  docker compose exec php php artisan cache:clear
-```
-- Tidak ada migration baru, tidak ada perubahan Docker.
+- Gunakan field `timezone` yang sudah tersedia dari API `/data/2.5/weather` — TIDAK perlu API tambahan.
+- Buat/reuse helper function terpusat untuk konversi (`formatUtcOffset($timezoneSeconds)`) yang mengembalikan string format "UTC+X" atau "UTC-X" (dengan handling untuk offset non-bulat seperti +5:30).
+- Test dengan minimal 2-3 kota di timezone berbeda untuk verifikasi:
+  - Jakarta (UTC+7)
+  - Paris (UTC+1 atau +2 tergantung musim)
+  - Kota dengan offset non-bulat jika ingin extra thorough (misal Mumbai, India — UTC+5:30) untuk memastikan format menit juga dihandle dengan benar.
+- **TIDAK ADA migration baru** — field timezone tidak perlu disimpan permanen ke database, cukup ditampilkan real-time dari response API saat itu (atau simpan sementara di state Livewire, bukan kolom database baru).
+- **TIDAK ADA perubahan Docker.**
 
 ## Deliverable
-- Halaman History dengan card tabel terpisah dari card filter tanggal.
-- Nama kota tampil Title Case di semua baris.
-- Spacing badge risk lebih rapi.
-- Konsistensi visual penuh dengan Dashboard & Leaderboard.
-- Screenshot hasil akhir (desktop + mobile) untuk verifikasi.
-- Screenshot Dashboard, Comparison, Leaderboard SEBELUM dan SESUDAH untuk membuktikan ketiganya tidak ikut berubah/rusak.
+- Card cuaca Dashboard menampilkan info timezone (format "UTC+X") berdampingan dengan tanggal/jam yang sudah ada.
+- Waktu lokal tetap akurat dan konsisten dengan Hourly Forecast.
+- Screenshot hasil akhir untuk minimal 2 kota berbeda timezone (Jakarta & kota lain, misal Paris atau London) untuk membuktikan info timezone berubah sesuai kota.
 
 ## Checklist Verifikasi
-- [ ] Perubahan hanya di halaman History, Dashboard/Comparison/Leaderboard tidak berubah.
-- [ ] Card filter tanggal dan card tabel sudah terpisah dengan jarak yang jelas.
-- [ ] Nama kota tampil Title Case ("Tel Aviv", "Bandung", "Jakarta") di semua baris tabel.
-- [ ] Badge risk (Low/Medium/High) punya spacing yang rapi, tidak menempel dengan teks di atasnya.
-- [ ] Style tabel (header, border, hover) konsisten dengan Leaderboard.
-- [ ] Ikon cuaca di kolom WEATHER menggunakan ikon yang sudah terverifikasi valid (tidak menyebabkan error seperti kasus Leaderboard sebelumnya).
+- [ ] Label timezone ("UTC+7", dst) muncul di card cuaca Dashboard.
+- [ ] Format timezone dinamis mengikuti offset aktual dari API, bukan hardcoded.
+- [ ] Offset non-bulat (misal +5:30) ditampilkan dengan benar jika ditemui saat testing.
+- [ ] Waktu lokal di card tetap konsisten dengan waktu di Hourly Forecast (tidak ada perbedaan/konflik).
+- [ ] Test dengan minimal 2 kota berbeda timezone — info timezone berubah sesuai kota yang dicari.
 - [ ] Tidak ada migration baru dibuat.
 - [ ] Tidak ada perubahan Docker.
-- [ ] Tampilan tetap responsive di mobile.
+- [ ] Fitur lain (Weather Map, Risk Assessment, dst) tetap berfungsi normal.
