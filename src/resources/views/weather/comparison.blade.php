@@ -10,87 +10,69 @@
 
     <style>
         html {
-            background-color: #06111f;
+            background-color: #020817;
         }
 
         body.weather-dashboard {
-            background-color: #06111f;
+            background-color: #020817;
             background-image:
-                linear-gradient(rgba(148, 163, 184, .035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, .035) 1px, transparent 1px),
-                radial-gradient(circle at 10% 10%, rgba(14, 165, 233, .18), transparent 28rem),
-                radial-gradient(circle at 90% 20%, rgba(45, 212, 191, .14), transparent 30rem),
-                linear-gradient(145deg, #06111f 0%, #0b1f35 48%, #071426 100%);
-            background-size: 42px 42px, 42px 42px, auto, auto, auto;
+                linear-gradient(rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, .035) 1px, transparent 1px),
+                linear-gradient(150deg, #020817 0%, #071426 46%, #042f3f 100%);
+            background-size: 48px 48px, 48px 48px, auto;
             color: #e2e8f0;
         }
 
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .045));
-            border: 1px solid rgba(255, 255, 255, .13);
-            box-shadow: 0 24px 70px rgba(2, 8, 23, .28);
-            backdrop-filter: blur(20px);
+            background: linear-gradient(145deg, rgba(15, 23, 42, .84), rgba(15, 23, 42, .54));
+            border: 1px solid rgba(255, 255, 255, .10);
+            box-shadow: 0 22px 60px rgba(2, 8, 23, .34);
+            backdrop-filter: blur(18px);
         }
     </style>
 </head>
 <body class="weather-dashboard min-h-screen text-slate-100 antialiased" x-data="{ mobileMenuOpen: false }">
     <!-- Modern Navbar -->
-    <nav class="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
-            <div class="glass-panel flex h-16 items-center justify-between gap-4 rounded-full px-4 sm:h-[70px] sm:px-6 lg:gap-8 lg:px-8">
-                
-                <!-- Logo Section -->
-                <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-teal-400 shadow-lg shadow-cyan-950/40 sm:h-11 sm:w-11">
-                        <x-heroicon-o-cloud class="h-6 w-6 text-slate-950 sm:h-7 sm:w-7" />
+    <nav class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+        <div class="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <a href="/" class="flex min-w-0 items-center gap-3">
+                <div class="flex h-9 w-9 flex-none items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/40">
+                    <x-heroicon-o-cloud class="h-5 w-5" />
+                </div>
+                <span class="truncate text-lg font-black text-white">WeatherInsight</span>
+            </a>
+
+            <div class="hidden h-full items-center gap-7 lg:flex">
+                <a href="/" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Dashboard</a>
+                <a href="/comparison" class="relative flex h-full items-center text-sm font-bold text-white">
+                    Comparison
+                    <span class="absolute bottom-0 left-0 h-0.5 w-full bg-cyan-400"></span>
+                </a>
+                <a href="/leaderboard" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Leaderboard</a>
+                <a href="/history" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">History</a>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                @livewire('temperature-toggle')
+
+                <div class="hidden items-center gap-2 sm:flex">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-sm font-bold text-slate-300">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
-                    <div class="hidden sm:block">
-                        <h1 class="text-lg font-black tracking-tight text-white lg:text-xl">WeatherInsight</h1>
-                    </div>
+                    <span class="hidden max-w-24 truncate text-sm font-bold text-white xl:block">{{ auth()->user()->name }}</span>
                 </div>
 
-                <!-- Desktop Navigation Menu -->
-                <div class="hidden items-center gap-1 lg:flex">
-                    <a href="/" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Dashboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/comparison" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
-                        <span>Comparison</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/leaderboard" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Leaderboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/history" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>History</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                </div>
-
-                <!-- Right Section: User -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <!-- User Info (Hidden on mobile) -->
-                    <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-3 py-2 sm:flex lg:px-4">
-                        <x-heroicon-o-user-circle class="h-5 w-5 text-cyan-300" />
-                        <span class="text-sm font-semibold text-white">{{ auth()->user()->name }}</span>
-                    </div>
-
-                    <!-- Logout Button (Hidden on mobile) -->
-                    <form method="POST" action="/logout" class="hidden sm:block">
-                        @csrf
-                        <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
-                            <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
-                        </button>
-                    </form>
-
-                    <!-- Mobile Menu Button -->
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/25 text-white transition hover:bg-slate-950/40 lg:hidden">
-                        <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
-                        <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+                <form method="POST" action="/logout" class="hidden sm:block">
+                    @csrf
+                    <button type="submit" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-slate-300 transition hover:border-rose-400/50 hover:text-rose-300" title="Logout">
+                        <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
                     </button>
-                </div>
+                </form>
+
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-white transition hover:border-cyan-400 lg:hidden" title="Menu">
+                    <x-heroicon-o-bars-3 x-show="!mobileMenuOpen" class="h-5 w-5" />
+                    <x-heroicon-o-x-mark x-show="mobileMenuOpen" x-cloak class="h-5 w-5" />
+                </button>
             </div>
         </div>
     </nav>
@@ -105,7 +87,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-1"
-         class="fixed inset-x-0 top-20 z-40 px-4 sm:top-[88px] sm:px-6 lg:hidden">
+         class="fixed inset-x-0 top-20 z-40 px-4 sm:px-6 lg:hidden">
         <div class="glass-panel mx-auto max-w-7xl overflow-hidden rounded-3xl">
             <div class="flex flex-col p-4">
                 <!-- Mobile User Info -->
@@ -145,21 +127,15 @@
         </div>
     </div>
 
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
         <!-- Header Section -->
-        <section class="glass-panel relative overflow-hidden rounded-3xl p-6 sm:p-8 mb-8">
-            <div class="absolute -right-16 top-0 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl"></div>
-            <div class="absolute bottom-0 left-1/4 h-48 w-48 rounded-full bg-teal-400/10 blur-3xl"></div>
-            
-            <div class="relative">
-                <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">Side-by-Side Intelligence</p>
-                <h1 class="mt-2 text-3xl font-black text-white sm:text-4xl">Weather Comparison</h1>
-                <p class="mt-2 text-slate-400">Compare weather conditions between two cities and analyze the differences</p>
-            </div>
-        </section>
+        <div class="mb-8">
+            <h1 class="text-3xl font-black text-white sm:text-4xl">Weather Comparison</h1>
+            <p class="mt-2 text-slate-400">Compare weather conditions between two cities and analyze the differences</p>
+        </div>
 
         <!-- Search Form -->
-        <form method="GET" action="/comparison" class="glass-panel mb-8 rounded-3xl p-4 sm:p-6">
+        <form method="GET" action="/comparison" class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-5 mb-8">
             <div class="grid gap-4 sm:grid-cols-2">
                 <!-- Primary City -->
                 <div>
@@ -172,7 +148,7 @@
                             name="primary_city"
                             value="{{ $primaryCity }}"
                             placeholder="Enter primary city"
-                            class="w-full rounded-2xl border border-white/10 bg-slate-950/40 py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
+                            class="w-full rounded-full border border-white/10 bg-slate-950/40 py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
                         >
                     </div>
                 </div>
@@ -188,13 +164,13 @@
                             name="comparison_city"
                             value="{{ $comparisonCity }}"
                             placeholder="Enter comparison city"
-                            class="w-full rounded-2xl border border-white/10 bg-slate-950/40 py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-teal-400 focus:ring-teal-400"
+                            class="w-full rounded-full border border-white/10 bg-slate-950/40 py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
                         >
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="mt-4 w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-teal-400 px-7 py-3.5 font-bold text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:brightness-110 sm:w-auto">
+            <button type="submit" class="mt-4 w-full rounded-lg bg-cyan-500 px-7 py-3.5 font-semibold text-white shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-600 sm:w-auto">
                 <span class="flex items-center justify-center gap-2">
                     <x-heroicon-o-arrows-right-left class="h-5 w-5" />
                     Compare Cities
@@ -223,10 +199,8 @@
             </div>
 
             <!-- Comparison Summary -->
-            <section class="glass-panel relative overflow-hidden rounded-3xl p-6 sm:p-8">
-                <div class="absolute -right-16 top-0 h-56 w-56 rounded-full bg-purple-400/10 blur-3xl"></div>
-                
-                <div class="relative">
+            <section class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6 sm:p-8">
+                <div>
                     @php
                         $temperatureDiff = $comparisonWeather->temperature - $primaryWeather->temperature;
                         $humidityDiff = $comparisonWeather->humidity - $primaryWeather->humidity;
@@ -244,23 +218,63 @@
                         $badgeItems = [
                             [
                                 'icon' => 'heroicon-o-fire',
-                                'label' => number_format(abs($temperatureDiff), 1).'°C '.($temperatureDiff >= 0 ? 'Warmer' : 'Cooler'),
-                                'tone' => $temperatureDiff >= 0 ? 'border-orange-400/30 bg-orange-500/10 text-orange-300' : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-300',
+                                'label' => $temperatureDiff === 0
+                                    ? 'Similar Temperatures'
+                                    : (
+                                        $temperatureDiff > 0
+                                            ? $comparisonWeather->city . ' is ' . number_format(abs($temperatureDiff), 1) . '°C Warmer'
+                                            : $comparisonWeather->city . ' is ' . number_format(abs($temperatureDiff), 1) . '°C Cooler'
+                                    ),
+                                'tone' => $temperatureDiff === 0
+                                    ? 'border-slate-400/30 bg-slate-500/10 text-slate-300'
+                                    : ($temperatureDiff > 0
+                                        ? 'border-orange-400/30 bg-orange-500/10 text-orange-300'
+                                        : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-300'),
                             ],
                             [
                                 'icon' => 'heroicon-o-beaker',
-                                'label' => number_format(abs($humidityDiff), 0).'% '.($humidityDiff >= 0 ? 'More Humid' : 'Drier'),
-                                'tone' => $humidityDiff >= 0 ? 'border-sky-400/30 bg-sky-500/10 text-sky-300' : 'border-amber-400/30 bg-amber-500/10 text-amber-300',
+                                'label' => $humidityDiff === 0
+                                    ? 'Similar Humidity'
+                                    : (
+                                        $humidityDiff > 0
+                                            ? $comparisonWeather->city . ' is ' . number_format(abs($humidityDiff), 0) . '% More Humid'
+                                            : $comparisonWeather->city . ' is ' . number_format(abs($humidityDiff), 0) . '% Drier'
+                                    ),
+                                'tone' => $humidityDiff === 0
+                                    ? 'border-slate-400/30 bg-slate-500/10 text-slate-300'
+                                    : ($humidityDiff > 0
+                                        ? 'border-sky-400/30 bg-sky-500/10 text-sky-300'
+                                        : 'border-amber-400/30 bg-amber-500/10 text-amber-300'),
                             ],
                             [
                                 'icon' => 'heroicon-o-arrow-trending-up',
-                                'label' => number_format(abs($windDiff), 1).' m/s '.($windDiff >= 0 ? 'Stronger Wind' : 'Calmer Wind'),
-                                'tone' => $windDiff >= 0 ? 'border-teal-400/30 bg-teal-500/10 text-teal-300' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
+                                'label' => $windDiff === 0
+                                    ? 'Similar Wind Speed'
+                                    : (
+                                        $windDiff > 0
+                                            ? $comparisonWeather->city . ' has ' . number_format(abs($windDiff), 1) . ' m/s Stronger Wind'
+                                            : $comparisonWeather->city . ' has ' . number_format(abs($windDiff), 1) . ' m/s Calmer Wind'
+                                    ),
+                                'tone' => $windDiff === 0
+                                    ? 'border-slate-400/30 bg-slate-500/10 text-slate-300'
+                                    : ($windDiff > 0
+                                        ? 'border-teal-400/30 bg-teal-500/10 text-teal-300'
+                                        : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'),
                             ],
                             [
                                 'icon' => 'heroicon-o-shield-check',
-                                'label' => $riskDiff === 0 ? 'Same Risk Level' : ($riskDiff < 0 ? 'Safer Risk Level' : 'Higher Risk Level'),
-                                'tone' => $riskDiff <= 0 ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' : 'border-rose-400/30 bg-rose-500/10 text-rose-300',
+                                'label' => $riskDiff === 0
+                                    ? 'Same Risk Level'
+                                    : (
+                                        $riskDiff < 0
+                                            ? $primaryWeather->city . ' has Safer Risk Level'
+                                            : $comparisonWeather->city . ' has Higher Risk Level'
+                                    ),
+                                'tone' => $riskDiff === 0
+                                    ? 'border-slate-400/30 bg-slate-500/10 text-slate-300'
+                                    : ($riskDiff < 0
+                                        ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'
+                                        : 'border-rose-400/30 bg-rose-500/10 text-rose-300'),
                             ],
                         ];
                     @endphp
@@ -292,7 +306,14 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Temperature</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        {!! $summary['temperature'] !!}
+                                        {!! $temperatureDiff === 0
+                                            ? 'Both cities have similar temperatures.'
+                                            : (
+                                                $temperatureDiff > 0
+                                                    ? $comparisonWeather->city . ' is ' . number_format(abs($temperatureDiff), 1) . '°C warmer than ' . $primaryWeather->city . '.'
+                                                    : $comparisonWeather->city . ' is ' . number_format(abs($temperatureDiff), 1) . '°C cooler than ' . $primaryWeather->city . '.'
+                                            )
+                                        !!}
                                     </p>
                                 </div>
                             </div>
@@ -305,7 +326,14 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Humidity</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        {!! $summary['humidity'] !!}
+                                        {!! $humidityDiff === 0
+                                            ? 'Both cities have similar humidity levels.'
+                                            : (
+                                                $humidityDiff > 0
+                                                    ? $comparisonWeather->city . ' is ' . number_format(abs($humidityDiff), 0) . '% more humid than ' . $primaryWeather->city . '.'
+                                                    : $comparisonWeather->city . ' is ' . number_format(abs($humidityDiff), 0) . '% drier than ' . $primaryWeather->city . '.'
+                                            )
+                                        !!}
                                     </p>
                                 </div>
                             </div>
@@ -318,7 +346,14 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Wind Speed</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        {!! $summary['wind'] !!}
+                                        {!! $windDiff === 0
+                                            ? 'Both cities have similar wind speeds.'
+                                            : (
+                                                $windDiff > 0
+                                                    ? $comparisonWeather->city . ' has ' . number_format(abs($windDiff), 1) . ' m/s stronger winds than ' . $primaryWeather->city . '.'
+                                                    : $comparisonWeather->city . ' has ' . number_format(abs($windDiff), 1) . ' m/s calmer winds than ' . $primaryWeather->city . '.'
+                                            )
+                                        !!}
                                     </p>
                                 </div>
                             </div>
@@ -331,7 +366,14 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Risk Level</p>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">
-                                        {!! $summary['risk'] !!}
+                                        {!! $riskDiff === 0
+                                            ? 'Both cities have similar risk levels.'
+                                            : (
+                                                $riskDiff < 0
+                                                    ? $primaryWeather->city . ' has a safer risk level than ' . $comparisonWeather->city . '.'
+                                                    : $comparisonWeather->city . ' has a higher risk level than ' . $primaryWeather->city . '.'
+                                            )
+                                        !!}
                                     </p>
                                 </div>
                             </div>
@@ -341,7 +383,7 @@
             </section>
         @elseif($comparisonError)
             <!-- Error State -->
-            <div class="glass-panel rounded-3xl border border-rose-400/20 bg-gradient-to-br from-rose-500/10 to-red-500/5 p-8">
+            <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-8">
                 <div class="flex items-start gap-4">
                     <x-heroicon-o-exclamation-triangle class="h-8 w-8 flex-none text-rose-300" />
                     <div>
@@ -352,8 +394,8 @@
             </div>
         @else
             <!-- Empty State -->
-            <div class="glass-panel rounded-3xl p-12 text-center">
-                <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-teal-400/10">
+            <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-8 text-center">
+                <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-cyan-500/20">
                     <x-heroicon-o-arrows-right-left class="h-10 w-10 text-cyan-300" />
                 </div>
                 <h3 class="mt-6 text-xl font-black text-white">Ready for Comparison</h3>

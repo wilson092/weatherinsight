@@ -33,15 +33,12 @@
     };
 @endphp
 
-<article class="glass-panel relative overflow-hidden rounded-3xl border p-6 sm:p-8 {{ $style['border'] }} {{ $style['bg'] }}">
-    <!-- Background decoration -->
-    <div class="absolute -right-12 top-0 h-40 w-40 rounded-full blur-3xl {{ $style['icon'] }} opacity-20"></div>
-
+<article class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6 sm:p-8">
     <div class="relative">
         <!-- Header -->
         <div class="mb-6 flex items-start justify-between gap-3">
             <div class="flex items-start gap-3">
-                <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl {{ $style['icon'] }}">
+                <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300">
                     <x-heroicon-o-map-pin class="h-6 w-6" />
                 </div>
                 <div>
@@ -50,7 +47,7 @@
                 </div>
             </div>
             @if($source)
-                <span class="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {{ $style['badge'] }}">
+                <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border-cyan-300/15 bg-cyan-300/10 text-cyan-200">
                     {{ $source }}
                 </span>
             @endif
@@ -119,7 +116,13 @@
                             <x-heroicon-o-shield-exclamation class="h-5 w-5 text-slate-400" />
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Risk Analysis</span>
                         </div>
-                        <span class="text-sm font-black {{ $riskColors[$riskKey($analysis['risk'] ?? null)] ?? 'text-slate-300' }}">
+                        <span @class([
+                            'rounded-full px-3 py-1 text-sm font-semibold',
+                            'bg-green-500/20 text-green-300' => $riskKey($analysis['risk'] ?? null) === 'Low',
+                            'bg-yellow-500/20 text-yellow-300' => $riskKey($analysis['risk'] ?? null) === 'Medium',
+                            'bg-red-500/20 text-red-300' => $riskKey($analysis['risk'] ?? null) === 'High',
+                            'bg-purple-500/20 text-purple-300' => $riskKey($analysis['risk'] ?? null) === 'Extreme',
+                        ])>
                             {{ $analysis['risk'] ?? 'Unknown' }}
                         </span>
                     </div>
