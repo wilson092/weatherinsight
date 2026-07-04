@@ -14,8 +14,6 @@
             'pressure' => $latest->pressure,
             'wind_speed' => $latest->wind_speed,
             'visibility' => $latest->visibility,
-            'uvi' => $latest->uvi,
-            'dew_point' => $latest->dew_point,
         ];
     } elseif ($selectedDay) {
         // Use the simplified forecast data for a future day
@@ -29,8 +27,6 @@
             'pressure' => null, // Not available
             'wind_speed' => null, // Not available
             'visibility' => null, // Not available
-            'uvi' => null, // Not available
-            'dew_point' => null, // Not available
         ];
     }
 @endphp
@@ -88,15 +84,13 @@
         </div>
 
         <!-- Bottom Details Grid -->
-        <div class="relative grid grid-cols-2 gap-px border-t border-white/10 bg-slate-900/50 p-4 sm:grid-cols-3">
+        <div class="relative grid grid-cols-2 gap-px border-t border-white/10 bg-slate-900/50 p-4 sm:grid-cols-2">
             @php
                 $details = [
-                    ['icon' => 'heroicon-o-sun', 'label' => 'UV Index', 'value' => is_numeric($displayData['uvi']) ? round($displayData['uvi'], 1) : 'N/A'],
-                    ['icon' => 'heroicon-o-eye', 'label' => 'Visibility', 'value' => is_numeric($displayData['visibility']) ? ($displayData['visibility'] / 1000) . ' km' : 'N/A'],
-                    ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? round($displayData['wind_speed']) . ' km/h' : 'N/A'],
                     ['icon' => 'heroicon-o-beaker', 'label' => 'Humidity', 'value' => is_numeric($displayData['humidity']) ? $displayData['humidity'] . '%' : 'N/A'],
                     ['icon' => 'heroicon-o-arrow-down-on-square', 'label' => 'Pressure', 'value' => is_numeric($displayData['pressure']) ? $displayData['pressure'] . ' hPa' : 'N/A'],
-                    ['icon' => 'heroicon-o-cloud-arrow-down', 'label' => 'Dew Point', 'value' => is_numeric($displayData['dew_point']) ? round($this->getConvertedTemperature($displayData['dew_point'])) . '°' : 'N/A'],
+                    ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? round($displayData['wind_speed']) . ' km/h' : 'N/A'],
+                    ['icon' => 'heroicon-o-eye', 'label' => 'Visibility', 'value' => is_numeric($displayData['visibility']) ? ($displayData['visibility'] / 1000) . ' km' : 'N/A'],
                 ];
             @endphp
 

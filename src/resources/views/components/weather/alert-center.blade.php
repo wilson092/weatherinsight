@@ -86,7 +86,7 @@
         }
     }"
     @temperature-unit-changed.window="unit = $event.detail"
-    class="grid gap-5 md:grid-cols-2 xl:grid-cols-1"
+    class="grid h-full gap-5 md:grid-cols-2 xl:grid-cols-1"
 >
     <article aria-labelledby="alert-center-title" class="glass-panel flex min-h-[230px] flex-col overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6">
         <div class="mb-4 flex items-center justify-between gap-3">

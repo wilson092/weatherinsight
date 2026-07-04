@@ -12,10 +12,15 @@ class WeatherRuleEngineService
     public function analyze(WeatherHistory $weather): array
     {
         $analysis = $this->calculateRiskScore($weather);
-        $score = $analysis['score'];
+        $rawScore = $analysis['score'];
+        $maxPossibleScore = $analysis['max_score'];
         $triggeredRules = $analysis['triggered_rules'];
+        $allRules = $analysis['all_rules']; // Get all rules for context
 
-        $riskCategory = RiskCategory::forScore($score);
+        // Normalize the score to a 0-100 scale
+        $normalizedScore = ($maxPossibleScore > 0) ? ($rawScore / $maxPossibleScore) * 100 : 0;
+
+        $riskCategory = RiskCategory::forScore($normalizedScore);
 
         if ($riskCategory) {
             $risk = $riskCategory->name;
@@ -35,19 +40,23 @@ class WeatherRuleEngineService
             'risk_category' => $riskCategory,
             'recommendation' => $recommendation,
             'insight' => $insight,
-            'score' => $score,
+            'score' => round($normalizedScore),
+            'max_score' => 100, // The gauge max is now always 100
             'triggered_rules' => $triggeredRules,
+            'all_rules' => $allRules, // Pass all rules for detailed display
+            'weather_data' => $weather, // Pass the weather data itself
         ];
     }
 
     public function calculateRiskScore(WeatherHistory $weather): array
     {
         $score = 0;
+        $maxScore = 0;
         $triggeredRules = [];
-        // Get all active rules and group them by type. This allows us to process
-        // rules for the same weather parameter (e.g., high pressure vs. low pressure)
-        // and ensure only the most relevant one is triggered.
-        $rulesByType = WeatherRule::where('is_active', true)->get()->groupBy('rule_type');
+        $allActiveRules = WeatherRule::where('is_active', true)->get();
+        $maxScore = $allActiveRules->sum('score_weight');
+
+        $rulesByType = $allActiveRules->groupBy('rule_type');
 
         foreach ($rulesByType as $type => $rules) {
             $value = $weather->{$type};
@@ -56,8 +65,7 @@ class WeatherRuleEngineService
             }
 
             $matchedRule = null;
-            // For each type, find the first rule that matches. This prevents duplicate
-            // scoring for the same metric (e.g. triggering both "High Pressure" and "Low Pressure").
+            // For each type, find the first rule that matches.
             foreach ($rules as $rule) {
                 if ($this->isRuleMet($value, $rule)) {
                     $matchedRule = $rule;
@@ -80,7 +88,9 @@ class WeatherRuleEngineService
 
         return [
             'score' => $score,
+            'max_score' => $maxScore,
             'triggered_rules' => $triggeredRules,
+            'all_rules' => $allActiveRules,
         ];
     }
 
