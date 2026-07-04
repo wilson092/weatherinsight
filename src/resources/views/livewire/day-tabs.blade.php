@@ -21,7 +21,10 @@
                             class="-my-2 h-12 w-12"
                         >
                         <span class="font-semibold {{ $selectedDayIndex === $index ? 'text-white' : 'text-slate-400' }}">
-                            {{ round($this->getConvertedTemperature($day['temp']['max'])) }}°
+                            {{ round($this->getConvertedTemperature($day['temp']['current'])) }}°
+                        </span>
+                        <span class="text-xs {{ $selectedDayIndex === $index ? 'text-white' : 'text-slate-400' }}">
+                            H:{{ round($this->getConvertedTemperature($day['temp']['max'])) }}° L:{{ round($this->getConvertedTemperature($day['temp']['min'])) }}°
                         </span>
                     </button>
                 </div>

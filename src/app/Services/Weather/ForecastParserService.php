@@ -77,13 +77,22 @@ class ForecastParserService
                     return $localHour >= 11 && $localHour <= 13;
                 }) ?? $dayItems->first();
 
+                // Calculate min and max temperature for the entire day
+                $minTempOfDay = $dayItems->min('main.temp');
+                $maxTempOfDay = $dayItems->max('main.temp');
+
                 return [
                     'dt' => Carbon::createFromTimestamp($dayItems->first()['dt'] + $timezoneOffset)->startOfDay()->timestamp,
                     'temp' => [
-                        'min' => $dayItems->min('main.temp_min'),
-                        'max' => $dayItems->max('main.temp_max'),
+                        'min' => $minTempOfDay,
+                        'max' => $maxTempOfDay,
+                        'current' => data_get($representativeItem, 'main.temp'), // Representative temp for the day tab
                     ],
-                    'weather' => $representativeItem['weather'],
+                    'weather' => data_get($representativeItem, 'weather'),
+                    'humidity' => data_get($representativeItem, 'main.humidity'),
+                    'pressure' => data_get($representativeItem, 'main.pressure'),
+                    'wind_speed' => data_get($representativeItem, 'wind.speed'),
+                    'pop' => data_get($representativeItem, 'pop'), // Probability of precipitation
                 ];
             })
             ->values()

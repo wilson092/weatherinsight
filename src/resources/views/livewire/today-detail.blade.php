@@ -19,14 +19,14 @@
         // Use the simplified forecast data for a future day
         $displayData = [
             'dt' => $selectedDay['dt'],
-            'temp' => $selectedDay['temp']['max'], // Show max temp for the day
+            'temp' => $selectedDay['temp']['current'], // Show representative temp for the day
             'feels_like' => null, // Not available in daily forecast
             'description' => $selectedDay['weather'][0]['description'],
             'icon' => $selectedDay['weather'][0]['icon'],
-            'humidity' => null, // Not available
-            'pressure' => null, // Not available
-            'wind_speed' => null, // Not available
-            'visibility' => null, // Not available
+            'humidity' => $selectedDay['humidity'],
+            'pressure' => $selectedDay['pressure'],
+            'wind_speed' => $selectedDay['wind_speed'],
+            'visibility' => null, // Not available, as per instruction to remove it
         ];
     }
 
