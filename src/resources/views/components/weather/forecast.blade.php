@@ -60,8 +60,8 @@
                             alt="{{ data_get($item, 'weather.0.description', 'Forecast weather') }}"
                         >
                         <div class="mt-2 flex items-baseline justify-center gap-1">
-                            <span class="text-2xl font-black text-white">{{ number_format($item['max_temp'], 0) }}°</span>
-                            <span class="text-base font-semibold text-slate-400">/ {{ number_format($item['min_temp'], 0) }}°</span>
+                            <span class="text-2xl font-black text-white">Highest: {{ number_format($item['max_temp'], 0) }}°</span>
+                            <span class="text-base font-semibold text-slate-400">Lowest: {{ number_format($item['min_temp'], 0) }}°</span>
                         </div>
                         <p class="mt-1 h-9 overflow-hidden text-xs capitalize leading-4 text-slate-300">{{ data_get($item, 'weather.0.description', 'Unavailable') }}</p>
                         <div class="mt-3 flex items-center justify-center gap-4 text-[11px] text-slate-300">

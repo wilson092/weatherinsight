@@ -13,7 +13,7 @@
                             }}"
                     >
                         <span class="font-bold {{ $selectedDayIndex === $index ? 'text-white' : 'text-slate-300' }}">
-                            {{ $index === 0 ? 'Today' : \Carbon\Carbon::createFromTimestamp($day['dt'])->format('D') }}
+                            {{ \Carbon\Carbon::createFromTimestamp($day['dt'])->format('D') }}
                         </span>
                         <img
                             src="https://openweathermap.org/img/wn/{{ $day['weather'][0]['icon'] }}@2x.png"
@@ -24,7 +24,7 @@
                             {{ round($this->getConvertedTemperature($day['temp']['current'])) }}°
                         </span>
                         <span class="text-xs {{ $selectedDayIndex === $index ? 'text-white' : 'text-slate-400' }}">
-                            H:{{ round($this->getConvertedTemperature($day['temp']['max'])) }}° L:{{ round($this->getConvertedTemperature($day['temp']['min'])) }}°
+                            Highest:{{ round($this->getConvertedTemperature($day['temp']['max'])) }}° Lowest:{{ round($this->getConvertedTemperature($day['temp']['min'])) }}°
                         </span>
                     </button>
                 </div>
