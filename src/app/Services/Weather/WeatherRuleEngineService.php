@@ -44,23 +44,37 @@ class WeatherRuleEngineService
     {
         $score = 0;
         $triggeredRules = [];
-        $rules = WeatherRule::where('is_active', true)->get();
+        // Get all active rules and group them by type. This allows us to process
+        // rules for the same weather parameter (e.g., high pressure vs. low pressure)
+        // and ensure only the most relevant one is triggered.
+        $rulesByType = WeatherRule::where('is_active', true)->get()->groupBy('rule_type');
 
-        foreach ($rules as $rule) {
-            $value = $weather->{$rule->rule_type};
-            $matched = $this->isRuleMet($value, $rule);
+        foreach ($rulesByType as $type => $rules) {
+            $value = $weather->{$type};
+            if (is_null($value)) {
+                continue;
+            }
 
-            Log::info([
-                'rule' => $rule->name,
-                'operator' => $rule->operator,
-                'threshold' => $rule->threshold_value,
-                'actual' => $value,
-                'matched' => $matched,
-            ]);
+            $matchedRule = null;
+            // For each type, find the first rule that matches. This prevents duplicate
+            // scoring for the same metric (e.g. triggering both "High Pressure" and "Low Pressure").
+            foreach ($rules as $rule) {
+                if ($this->isRuleMet($value, $rule)) {
+                    $matchedRule = $rule;
+                    break; // Stop at the first match for this type
+                }
+            }
 
-            if ($matched) {
-                $score += $rule->score_weight;
-                $triggeredRules[] = $rule;
+            if ($matchedRule) {
+                Log::info('Rule triggered', [
+                    'rule' => $matchedRule->name,
+                    'type' => $type,
+                    'value' => $value,
+                    'threshold' => $matchedRule->threshold_value,
+                    'score_added' => $matchedRule->score_weight,
+                ]);
+                $score += $matchedRule->score_weight;
+                $triggeredRules[] = $matchedRule;
             }
         }
 

@@ -1,7 +1,7 @@
 @props(['forecast'])
 
 @php
-    $hourlyData = array_slice($forecast['list'] ?? [], 0, 8);
+    $hourlyData = $forecast['hourly'] ?? [];
     $temperatures = array_map(fn ($item) => (float) data_get($item, 'main.temp', 0), $hourlyData);
     $minTemp = ! empty($temperatures) ? min($temperatures) : 0;
     $maxTemp = ! empty($temperatures) ? max($temperatures) : 0;
@@ -19,7 +19,21 @@
     $areaPoints = $linePoints ? $linePoints.' 100,100 0,100' : '';
 @endphp
 
-<section aria-labelledby="hourly-forecast-title" class="glass-panel min-h-[290px] overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6">
+<section
+    x-data="{
+        unit: 'C',
+        hourlyData: {{ json_encode($hourlyData) }},
+        convertTemp(temp) {
+            if (this.unit === 'F') {
+                return Math.round((temp * 9/5) + 32);
+            }
+            return Math.round(temp);
+        }
+    }"
+    @temperature-unit-changed.window="unit = $event.detail"
+    aria-labelledby="hourly-forecast-title"
+    class="glass-panel min-h-[290px] overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6"
+>
     <div class="mb-4 flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
             <span class="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-300">
@@ -44,43 +58,38 @@
                     <polyline points="{{ $linePoints }}" fill="none" stroke="#38bdf8" stroke-width="1.4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
 
-                <div class="absolute inset-x-0 top-1 flex justify-between px-1">
-                    @foreach($hourlyData as $item)
-                        <span class="text-xs font-black text-white">{{ number_format(data_get($item, 'main.temp', 0), 0) }}°</span>
-                    @endforeach
-                </div>
+<div class="absolute inset-x-0 top-1 flex justify-between px-1">
+    <template x-for="item in hourlyData" :key="item.dt">
+        <span class="text-xs font-black text-white" x-text="convertTemp(item.main.temp) + '°'"></span>
+    </template>
+</div>
 
-                <div class="absolute inset-x-0 bottom-0 flex justify-between px-1">
-                    @foreach($hourlyData as $item)
-                        <span class="text-[11px] text-slate-400">{{ \Carbon\Carbon::parse($item['dt_txt'])->format('H:i') }}</span>
-                    @endforeach
-                </div>
+<div class="absolute inset-x-0 bottom-0 flex justify-between px-1">
+    @foreach($hourlyData as $item)
+        <span class="text-[11px] text-slate-400">{{ \Carbon\Carbon::parse($item['dt_txt'])->format('H:i') }}</span>
+    @endforeach
+</div>
             </div>
         </div>
 
         <div class="-mx-5 mt-4 overflow-x-auto px-5 pb-1 sm:-mx-6 sm:px-6">
-            <div class="flex min-w-max gap-3">
-                @foreach($hourlyData as $item)
-                    @php
-                        $time = \Carbon\Carbon::parse($item['dt_txt']);
-                        $pop = round((float) ($item['pop'] ?? 0) * 100);
-                    @endphp
-
-                    <article class="w-[92px] flex-none rounded-2xl border border-white/10 bg-slate-900/62 p-3 text-center shadow-xl shadow-slate-950/10 transition duration-300 hover:border-cyan-400/50 hover:bg-slate-800/70">
-                        <p class="text-xs font-black text-white">{{ $time->format('H:i') }}</p>
-                        <img
-                            class="mx-auto my-2 h-11 w-11 object-contain"
-                            src="https://openweathermap.org/img/wn/{{ data_get($item, 'weather.0.icon') }}@2x.png"
-                            alt="{{ data_get($item, 'weather.0.description', 'Forecast weather') }}"
-                        >
-                        <p class="text-2xl font-black text-white">{{ number_format(data_get($item, 'main.temp', 0), 0) }}°</p>
-                        <div class="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-400">
-                            <x-heroicon-o-beaker class="h-3 w-3 text-cyan-300" />
-                            <span>{{ $pop }}%</span>
-                        </div>
-                    </article>
-                @endforeach
+<div class="flex min-w-max gap-3">
+    <template x-for="item in hourlyData" :key="item.dt">
+        <article class="w-[92px] flex-none rounded-2xl border border-white/10 bg-slate-900/62 p-3 text-center shadow-xl shadow-slate-950/10 transition duration-300 hover:border-cyan-400/50 hover:bg-slate-800/70">
+            <p class="text-xs font-black text-white" x-text="new Date(item.dt_txt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false })"></p>
+            <img
+                class="mx-auto my-2 h-11 w-11 object-contain"
+                :src="'https://openweathermap.org/img/wn/' + item.weather[0].icon + '@2x.png'"
+                :alt="item.weather[0].description"
+            >
+            <p class="text-2xl font-black text-white" x-text="convertTemp(item.main.temp) + '°'"></p>
+            <div class="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-400">
+                <x-heroicon-o-beaker class="h-3 w-3 text-cyan-300" />
+                <span x-text="Math.round(item.pop * 100) + '%'"></span>
             </div>
+        </article>
+    </template>
+</div>
         </div>
     @else
         <div class="flex min-h-52 items-center justify-center rounded-3xl border border-dashed border-white/10 text-sm text-slate-500">

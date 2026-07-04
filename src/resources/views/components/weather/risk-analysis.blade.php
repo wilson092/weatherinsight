@@ -48,7 +48,20 @@
     $insight = $analysis['insight'] ?? $latest?->insight ?? 'Current weather parameters are being monitored by the rule engine.';
 @endphp
 
-<section aria-labelledby="risk-analysis-title" class="glass-panel overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6">
+<section
+    x-data="{
+        unit: 'C',
+        convertTemp(temp) {
+            if (this.unit === 'F') {
+                return (temp * 9/5) + 32;
+            }
+            return temp;
+        }
+    }"
+    @temperature-unit-changed.window="unit = $event.detail"
+    aria-labelledby="risk-analysis-title"
+    class="glass-panel overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6"
+>
     <div class="mb-4 flex items-center justify-between gap-3">
         <div class="flex items-center gap-2">
             <span class="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-300">
@@ -99,12 +112,13 @@
                         </span>
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-200">{{ $rule->name }}</p>
-                            <p class="truncate text-xs {{ $isTriggered ? 'text-amber-300' : 'text-emerald-300' }}">
-                                {{ $isTriggered ? 'Triggered' : 'Normal' }}
-                                @if($currentValue !== null)
-                                    &bull; {{ is_numeric($currentValue) ? number_format((float) $currentValue, 1) : $currentValue }}{{ $unit }}
-                                @endif
-                            </p>
+                                <p class="truncate text-xs {{ $isTriggered ? 'text-amber-300' : 'text-emerald-300' }}">
+                                    {{ $isTriggered ? 'Triggered' : 'Normal' }}
+                                    @if($currentValue !== null)
+                                        &bull; 
+                                        <span x-text="unit === 'F' && '{{ $rule->rule_type }}' === 'temperature' ? convertTemp({{ $currentValue }}).toFixed(1) : {{ is_numeric($currentValue) ? number_format((float) $currentValue, 1) : "'$currentValue'" }}"></span>{{ $unit }}
+                                    @endif
+                                </p>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-xs font-black {{ $isTriggered ? 'bg-amber-400/10 text-amber-300' : 'bg-emerald-400/10 text-emerald-300' }}">
                             +{{ $isTriggered ? $rule->score_weight : 0 }}

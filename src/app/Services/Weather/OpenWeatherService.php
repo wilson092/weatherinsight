@@ -48,4 +48,5 @@ class OpenWeatherService
 
         return $response->json();
     }
+
 }

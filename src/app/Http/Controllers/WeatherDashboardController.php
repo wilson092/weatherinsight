@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TrackedCity;
 use App\Models\WeatherHistory;
+use App\Services\Weather\ForecastParserService;
 use App\Services\Weather\OpenWeatherService;
 use App\Services\Weather\WeatherAlertService;
 use App\Services\Weather\WeatherComparisonService;
@@ -20,15 +21,17 @@ class WeatherDashboardController extends Controller
         WeatherAlertService $alertService,
         WeatherLeaderboardService $leaderboardService,
         WeatherSnapshotService $snapshotService,
-        OpenWeatherService $openWeather, // Keep for forecast
+        OpenWeatherService $openWeather,
+        ForecastParserService $forecastParser
     ) {
         $city = $request->get('city', 'Jakarta');
 
         // Get latest weather data using the centralized service
         $latest = $snapshotService->getLatest($city, auth()->id());
 
-        // Fetch forecast (still separate for now)
-        $forecast = $openWeather->forecast($city);
+        // Fetch and parse forecast
+        $rawForecast = $openWeather->forecast($city);
+        $forecast = $forecastParser->parse($rawForecast);
 
         // HISTORY
         $history = WeatherHistory::where('city', $city)

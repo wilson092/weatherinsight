@@ -53,7 +53,26 @@
     ];
 @endphp
 
-<section aria-labelledby="weather-map-title" class="glass-panel overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6">
+<section
+    x-data="{
+        unit: 'C',
+        latest: {{ json_encode($latest) }},
+        convertTemp(temp) {
+            if (this.unit === 'F') {
+                return (temp * 9/5) + 32;
+            }
+            return temp;
+        },
+        get temperature() {
+            const temp = this.latest?.temperature;
+            if (temp === null || temp === undefined) return 'N/A';
+            return this.convertTemp(temp).toFixed(1) + (this.unit === 'F' ? '°F' : '°C');
+        }
+    }"
+    @temperature-unit-changed.window="unit = $event.detail"
+    aria-labelledby="weather-map-title"
+    class="glass-panel overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6"
+>
     <div class="mb-4 flex items-center gap-2">
         <span class="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-300">
             <x-heroicon-o-map class="h-4 w-4" />
@@ -62,7 +81,7 @@
     </div>
 
     <div class="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
+        <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
             @if($hasLocation)
                 <div class="relative w-full" style="height: 365px;">
                     <div
@@ -71,7 +90,7 @@
                         data-latitude="{{ (float) $latest->latitude }}"
                         data-longitude="{{ (float) $latest->longitude }}"
                         data-city="{{ $latest?->city ? \Illuminate\Support\Str::title($latest->city) : 'Unavailable' }}"
-                        data-temperature="{{ number_format($latest->temperature, 1) }} °C"
+                        :data-temperature="temperature"
                         data-condition="{{ $latest->weather_description ?? $latest->weather_main ?? 'Unavailable' }}"
                         data-humidity="{{ number_format($latest->humidity, 0) }} %"
                         data-wind-speed="{{ number_format($latest->wind_speed, 1) }} m/s"

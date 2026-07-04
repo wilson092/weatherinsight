@@ -63,7 +63,31 @@
         ->take(4);
 @endphp
 
-<section class="grid gap-5 md:grid-cols-2 xl:grid-cols-1">
+<section
+    x-data="{
+        unit: 'C',
+        convertTemp(temp) {
+            if (this.unit === 'F') {
+                return (temp * 9/5) + 32;
+            }
+            return temp;
+        },
+        formatValue(value, unit, type) {
+            if (value === null || value === '') {
+                return 'Unavailable';
+            }
+            
+            let temp = value;
+            if (type === 'temperature') {
+                temp = this.convertTemp(value);
+            }
+
+            return (isNaN(temp) ? temp : parseFloat(temp).toFixed(1)) + (unit === '°C' && this.unit === 'F' ? '°F' : unit);
+        }
+    }"
+    @temperature-unit-changed.window="unit = $event.detail"
+    class="grid gap-5 md:grid-cols-2 xl:grid-cols-1"
+>
     <article aria-labelledby="alert-center-title" class="glass-panel flex min-h-[230px] flex-col overflow-hidden rounded-3xl p-5 transition duration-300 hover:border-cyan-400/50 sm:p-6">
         <div class="mb-4 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
@@ -115,7 +139,7 @@
                                 <dl class="mt-3 grid gap-2 text-xs sm:grid-cols-2">
                                     <div>
                                         <dt class="text-slate-400">Current Value</dt>
-                                        <dd class="mt-0.5 font-bold text-white">{{ $formatValue($currentValue, $unit) }}</dd>
+                                        <dd class="mt-0.5 font-bold text-white" x-text="formatValue({{ $currentValue ?? 'null' }}, '{{ $unit }}', '{{ $rule->rule_type }}')"></dd>
                                     </div>
                                     <div>
                                         <dt class="text-slate-400">Threshold</dt>

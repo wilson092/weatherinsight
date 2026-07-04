@@ -253,6 +253,8 @@
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
+                @livewire('temperature-toggle')
+
                 <form method="GET" action="/" class="relative hidden md:block">
                     <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
@@ -353,30 +355,10 @@
     </div>
 
     <div class="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8">
-        <form method="GET" action="/" class="glass-panel mb-4 rounded-3xl p-2.5">
-            @if(request('compare_city'))
-                <input type="hidden" name="compare_city" value="{{ request('compare_city') }}">
-            @endif
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <label class="relative flex-1">
-                    <span class="sr-only">Search primary city</span>
-                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        name="city"
-                        data-primary-city-input
-                        value="{{ request('city', 'Jakarta') }}"
-                        placeholder="Search city..."
-                        class="h-12 w-full rounded-2xl border border-transparent bg-slate-950/40 pl-13 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
-                    >
-                </label>
-                <button type="submit" class="inline-flex h-12 items-center justify-center rounded-2xl bg-cyan-400 px-6 text-sm font-black text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:bg-cyan-300">
-                    Search
-                </button>
-            </div>
-        </form>
-
-        <div class="mb-4 flex items-center justify-end">
+        <div class="mb-4 flex items-center justify-between">
+            <h1 class="truncate text-xl font-bold text-white sm:text-2xl">
+                {{ request('city', 'Jakarta') }}
+            </h1>
             <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/40 px-3 py-1.5 text-xs text-slate-400">
                 <x-heroicon-o-clock class="h-4 w-4 text-cyan-300" />
                 <span>Last update:</span>
@@ -384,20 +366,26 @@
             </div>
         </div>
 
+        <!-- Day Tabs -->
+        <div class="mb-5">
+            @livewire('day-tabs', ['forecast' => $forecast])
+        </div>
+
         <main class="space-y-5">
-            <!-- Hero Section: Current Weather + Hourly Forecast -->
-            <div class="grid gap-5 xl:grid-cols-[1.02fr_1fr]">
-                <x-weather.current-weather :latest="$latest" />
+            <!-- Top Section: Today's Detail + Hourly Forecast -->
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-[1fr_1.2fr]">
+                @livewire('today-detail', ['latest' => $latest])
                 <x-weather.hourly-forecast :forecast="$forecast" />
             </div>
 
-            <div class="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
-                <x-weather.forecast :forecast="$forecast" />
-                <x-weather.risk-analysis :latest="$latest" :analysis="$riskAnalysis" />
+            <!-- Middle Section: Full-width Map -->
+            <div class="h-[450px] w-full overflow-hidden rounded-2xl glass-panel">
+                <x-weather.map :latest="$latest" />
             </div>
 
-            <div class="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
-                <x-weather.map :latest="$latest" />
+            <!-- Bottom Section: Risk Analysis + Other components -->
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <x-weather.risk-analysis :latest="$latest" :analysis="$riskAnalysis" />
                 <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" :latest="$latest" />
             </div>
         </main>
