@@ -1,49 +1,55 @@
-# Prompt: Tampilkan Timezone & Waktu Lokal di Card Cuaca Dashboard
+# Prompt: Audit Akurasi Data & Perbaiki Keterbacaan Hourly Forecast
 
 ## Konteks
-Saat ini card "Current Day Detail" di Dashboard menampilkan tanggal dan jam (misal "Wednesday, 08 Jul 2026" + jam di pojok kanan atas), tapi tidak menampilkan informasi **timezone** kota yang sedang dicari. Saya ingin menambahkan informasi timezone (misal "UTC+7" untuk Jakarta, "UTC+2" untuk Paris — offset ini berubah tergantung kota) beserta waktu lokal kota tersebut, sehingga user tahu persis di zona waktu mana kota itu berada, terutama berguna saat membandingkan kota-kota di timezone berbeda.
+Fitur timezone sudah berhasil (card menampilkan "UTC+02:00" untuk Paris, jam lokal 17:50 sudah benar). Namun Hourly Forecast masih terasa membingungkan (screenshot `paris-dashboard.png` terlampir):
 
-## Yang Harus Ditambahkan
+1. **Keterbacaan buruk** — grafik garis di atas card per-jam tidak punya referensi visual yang jelas (tidak ada gridline, tidak ada pembeda siang/malam, angka suhu di atas grafik terasa mengambang tanpa terhubung jelas ke titik datanya di bawah).
+2. **Kecurigaan data tidak akurat** — saat scroll ke jam-jam tertentu (misal sekitar 22:00), muncul suhu yang terasa tidak masuk akal dibanding jam-jam di sekitarnya (naik-turun tidak logis untuk pola suhu harian normal).
 
-### 1. Tampilkan Label Timezone di Card Cuaca
-- Di card "Current Day Detail" (Dashboard), tambahkan label kecil timezone di dekat informasi tanggal/jam yang sudah ada — contoh posisi: di samping atau di bawah jam ("Wednesday, 08 Jul 2026 — 22:22 **(UTC+7)**") atau sebagai elemen kecil terpisah di pojok kanan atas card, berdekatan dengan jam yang sudah ada.
-- Format timezone: "UTC+7" untuk Jakarta (WIB), "UTC+2" untuk Paris (waktu musim panas/CEST) atau "UTC+1" (musim dingin/CET) — format harus dinamis mengikuti offset aktual dari API, BUKAN hardcoded per kota (karena beberapa negara punya daylight saving time yang mengubah offset sepanjang tahun).
+## A. Audit Akurasi Data Suhu Per Jam
 
-### 2. Sumber Data Timezone
-- Ambil dari field `timezone` di response `/data/2.5/weather` (endpoint current weather) — field ini berupa **offset dalam detik** dari UTC (contoh: Jakarta = `25200` detik = +7 jam, Paris saat musim panas = `7200` detik = +2 jam).
-- Konversi offset detik ini ke format tampilan "UTC+X" atau "UTC-X":
-offset_jam = timezone_detik / 3600
-format_display = "UTC" + (offset_jam >= 0 ? "+" : "") + offset_jam
-  Contoh: `25200 / 3600 = 7` → tampil "UTC+7". Untuk offset yang bukan kelipatan jam penuh (misal India UTC+5:30), tampilkan dengan format "UTC+5:30" (offset dalam jam:menit, bukan dibulatkan).
+### 1. Verifikasi Urutan Logis Suhu
+- Cek SEMUA slot jam yang ditampilkan di Hourly Forecast (bukan cuma yang terlihat di layar awal, scroll penuh sampai slot terakhir) untuk kota Paris dan minimal 1 kota lain.
+- Pastikan pola suhu mengikuti logika wajar: biasanya turun setelah matahari terbenam, mencapai titik terendah menjelang subuh, lalu naik lagi setelah matahari terbit — TIDAK ADA lonjakan aneh di tengah malam yang tidak sesuai pola ini.
+- Jika ditemukan ada slot jam dengan suhu yang melompat tidak wajar (misal naik drastis di jam 22:00-23:00 padahal jam sebelum-sesudahnya turun), ini indikasi data API tidak ter-parsing dengan benar atau ada pergeseran index saat mapping `list[]` dari response `/data/2.5/forecast` ke tampilan.
 
-### 3. Waktu Lokal yang Sudah Benar (Reuse dari Perbaikan Sebelumnya)
-- Jam yang ditampilkan di card ini (pojok kanan atas, "22:22") **seharusnya sudah** menggunakan waktu lokal kota tersebut (hasil dari perbaikan konversi timezone yang sudah dikerjakan sebelumnya untuk Hourly Forecast) — pastikan konsisten, gunakan helper/service yang sama untuk konversi ini, jangan buat logic terpisah.
-- Verifikasi: waktu yang ditampilkan di card ini HARUS sama persis dengan waktu yang dipakai sebagai acuan "jam sekarang" di Hourly Forecast (rolling 24 jam dari waktu sekarang) — kedua tempat ini harus merujuk ke satu sumber waktu lokal yang konsisten.
+### 2. Cek Ulang Sinkronisasi Timezone dengan Data Suhu
+- Pastikan setelah konversi timezone (yang sudah diperbaiki sebelumnya untuk mengatasi error `InvalidTimeZoneException`), data suhu yang di-attach ke SETIAP slot jam juga ikut bergeser dengan benar sesuai jam yang sudah dikonversi — jangan sampai LABEL jam sudah benar (lokal) tapi NILAI suhu yang ditempelkan ke label tersebut masih dari index/urutan yang salah (tertukar antara data asli UTC dengan label yang sudah dikonversi ke lokal).
+- Test spesifik: ambil response mentah dari API untuk Paris, cocokkan manual timestamp UTC → offset +2 jam → apakah suhu di jam lokal hasil konversi SAMA PERSIS dengan suhu yang ditampilkan di UI untuk jam tersebut.
 
-### 4. Terapkan di Semua Tempat yang Relevan
-- Selain card cuaca utama, jika ada tempat lain yang menampilkan waktu kota (misal popup Weather Map), pertimbangkan menambahkan info timezone yang sama di sana juga untuk konsistensi — namun prioritas utama adalah card cuaca Dashboard.
+## B. Perbaiki Keterbacaan Visual Grafik & Card Per-Jam
+
+### 1. Tambahkan Gridline pada Grafik
+- Tambahkan garis bantu vertikal tipis (`stroke-slate-700/30`) di setiap titik data pada grafik, sejajar dengan label jam di sumbu X — ini membantu mata mengaitkan titik data dengan label jamnya.
+
+### 2. Tambahkan Tooltip Saat Hover
+- Saat kursor/mouse diarahkan ke titik tertentu pada grafik garis, tampilkan tooltip kecil yang menunjukkan jam + suhu tepat di titik tersebut — ini akan sangat membantu verifikasi visual dan kenyamanan baca, terutama karena angka suhu di atas grafik saat ini terasa "mengambang" tanpa penghubung jelas ke titik data.
+
+### 3. Beda Visual Siang vs Malam
+- Beri sedikit shading/background berbeda pada area grafik yang merepresentasikan malam hari (misal jam 18:00-06:00 dengan overlay sedikit lebih gelap) vs siang hari — ini membantu user langsung menangkap pola "kenapa turun di sini, naik di situ" tanpa perlu menghitung manual.
+
+### 4. Perjelas Alignment Angka Suhu dengan Titik Data
+- Pastikan angka suhu yang ditampilkan di atas grafik (misal "30°", "26°", dst) posisinya PERSIS lurus di atas titik data yang bersangkutan pada grafik, bukan hanya kira-kira sejajar. Gunakan koordinat yang sama (x-position) antara label angka dan titik data di SVG/canvas grafik.
+
+### 5. Perjelas Card Per-Jam di Bawah Grafik
+- Pastikan card per-jam (jam, ikon, suhu, %hujan) tersusun dalam urutan yang SAMA PERSIS dengan urutan titik di grafik atasnya — user harus bisa langsung mencocokkan titik di grafik dengan card di bawahnya tanpa bingung urutan.
 
 ## Ketentuan Teknis
-- Gunakan field `timezone` yang sudah tersedia dari API `/data/2.5/weather` — TIDAK perlu API tambahan.
-- Buat/reuse helper function terpusat untuk konversi (`formatUtcOffset($timezoneSeconds)`) yang mengembalikan string format "UTC+X" atau "UTC-X" (dengan handling untuk offset non-bulat seperti +5:30).
-- Test dengan minimal 2-3 kota di timezone berbeda untuk verifikasi:
-  - Jakarta (UTC+7)
-  - Paris (UTC+1 atau +2 tergantung musim)
-  - Kota dengan offset non-bulat jika ingin extra thorough (misal Mumbai, India — UTC+5:30) untuk memastikan format menit juga dihandle dengan benar.
-- **TIDAK ADA migration baru** — field timezone tidak perlu disimpan permanen ke database, cukup ditampilkan real-time dari response API saat itu (atau simpan sementara di state Livewire, bukan kolom database baru).
-- **TIDAK ADA perubahan Docker.**
+- Untuk audit data (bagian A), buat log sementara/debug print urutan `list[]` dari API vs hasil final yang ditampilkan, untuk membandingkan apakah ada index yang tertukar saat konversi timezone.
+- Untuk perbaikan visual (bagian B), gunakan library chart yang sudah dipakai saat ini (jika custom SVG, tambahkan elemen gridline/tooltip manual; jika pakai chart library seperti Chart.js/Recharts, aktifkan fitur tooltip & gridline bawaan library tersebut).
+- Tidak perlu API tambahan, tidak ada migration baru, tidak ada perubahan Docker.
 
 ## Deliverable
-- Card cuaca Dashboard menampilkan info timezone (format "UTC+X") berdampingan dengan tanggal/jam yang sudah ada.
-- Waktu lokal tetap akurat dan konsisten dengan Hourly Forecast.
-- Screenshot hasil akhir untuk minimal 2 kota berbeda timezone (Jakarta & kota lain, misal Paris atau London) untuk membuktikan info timezone berubah sesuai kota.
+- Laporan hasil audit: apakah ditemukan anomali suhu, dan jika ada, penjelasan root cause + perbaikannya.
+- Grafik Hourly Forecast dengan gridline, tooltip hover, shading siang/malam, dan alignment angka suhu yang presisi.
+- Screenshot hasil akhir untuk Paris dan minimal 1 kota lain, termasuk screenshot saat hover di beberapa titik grafik untuk membuktikan tooltip berfungsi.
 
 ## Checklist Verifikasi
-- [ ] Label timezone ("UTC+7", dst) muncul di card cuaca Dashboard.
-- [ ] Format timezone dinamis mengikuti offset aktual dari API, bukan hardcoded.
-- [ ] Offset non-bulat (misal +5:30) ditampilkan dengan benar jika ditemui saat testing.
-- [ ] Waktu lokal di card tetap konsisten dengan waktu di Hourly Forecast (tidak ada perbedaan/konflik).
-- [ ] Test dengan minimal 2 kota berbeda timezone — info timezone berubah sesuai kota yang dicari.
-- [ ] Tidak ada migration baru dibuat.
-- [ ] Tidak ada perubahan Docker.
-- [ ] Fitur lain (Weather Map, Risk Assessment, dst) tetap berfungsi normal.
+- [ ] Semua slot jam (scroll penuh) menunjukkan pola suhu yang logis, tidak ada lonjakan aneh yang tidak wajar.
+- [ ] Data suhu per-jam sudah tersinkronisasi benar dengan label jam yang sudah dikonversi ke waktu lokal (tidak tertukar index).
+- [ ] Grafik punya gridline yang membantu membaca titik data.
+- [ ] Tooltip muncul saat hover di titik grafik, menampilkan jam + suhu yang akurat.
+- [ ] Ada perbedaan visual (shading) antara periode siang dan malam pada grafik.
+- [ ] Angka suhu di atas grafik sejajar presisi dengan titik data di bawahnya.
+- [ ] Urutan card per-jam konsisten dengan urutan titik di grafik.
+- [ ] Test di minimal 2 kota berbeda timezone.
