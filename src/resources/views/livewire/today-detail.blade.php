@@ -29,6 +29,19 @@
             'visibility' => null, // Not available
         ];
     }
+
+    $timezoneString = null;
+    if ($isToday && $latest) {
+        if (is_numeric($latest->timezone)) {
+            $offsetInSeconds = (int) $latest->timezone;
+            $hours = intdiv($offsetInSeconds, 3600);
+            $minutes = intdiv($offsetInSeconds % 3600, 60);
+            $timezoneString = sprintf('%s%02d:%02d', $offsetInSeconds >= 0 ? '+' : '-', abs($hours), abs($minutes));
+        } elseif (is_string($latest->timezone)) {
+            // Handle if it's already a valid timezone string
+            $timezoneString = $latest->timezone;
+        }
+    }
 @endphp
 
 <div class="relative flex h-full flex-col overflow-hidden rounded-2xl glass-panel">
@@ -42,85 +55,104 @@
         </div>
 
         <!-- Main Content -->
-        <div class="relative flex flex-1 flex-col p-5 text-white">
+        <div class="relative flex flex-1 flex-col p-6 text-white">
             <!-- Top Info -->
             <div class="flex items-start justify-between">
                 <div>
-                    <h2 class="text-xl font-bold">
+                    <h2 class="text-2xl font-bold">
                         {{ \Carbon\Carbon::createFromTimestamp($displayData['dt'])->format('l') }}
                     </h2>
-                    <p class="text-sm text-slate-300">
+                    <p class="text-sm text-slate-400">
                         {{ \Carbon\Carbon::createFromTimestamp($displayData['dt'])->format('d M Y') }}
                     </p>
                 </div>
-                @if($isToday)
-                    <span class="text-sm font-semibold">{{ now()->format('H:i') }}</span>
+                @if($isToday && $timezoneString)
+                    <span class="text-lg font-semibold text-slate-300">{{ now($timezoneString)->format('H:i') }}</span>
                 @endif
             </div>
 
-            <!-- Center Info (Redesigned) -->
-            <div class="flex-1 flex flex-col justify-center my-2">
-                <div class="flex items-center gap-2">
+            <!-- Center 2-Column Layout -->
+            <div class="flex-1 my-4 grid grid-cols-[1.2fr_0.8fr] items-center gap-4">
+                <!-- Left Column: Weather Info -->
+                <div class="flex items-center gap-4">
                     <img
                         src="https://openweathermap.org/img/wn/{{ $displayData['icon'] }}@4x.png"
                         alt="{{ $displayData['description'] }}"
-                        class="-ml-4 h-32 w-32"
+                        class="-ml-4 h-36 w-36"
                     >
                     <div class="flex-1">
-                        <div class="flex items-baseline gap-2">
-                            <p class="text-6xl font-bold">
+                        <div class="flex items-baseline gap-3">
+                            <p class="text-7xl font-bold">
                                 {{ round($this->getConvertedTemperature($displayData['temp'])) }}°
                             </p>
                             @if($isToday && $latest->risk_level)
                                 <span @class([
-                                    'rounded-full px-2 py-0.5 text-xs font-semibold',
+                                    'rounded-full px-3 py-1 text-sm font-semibold',
                                     'bg-green-500/20 text-green-300' => $latest->risk_level === 'Rendah',
                                     'bg-yellow-500/20 text-yellow-300' => $latest->risk_level === 'Sedang',
                                     'bg-red-500/20 text-red-300' => $latest->risk_level === 'Tinggi',
                                 ])>
-                                    {{ $latest->risk_level }}
+                                    {{ \Illuminate\Support\Str::title($latest->risk_level) }}
                                 </span>
                             @endif
                         </div>
-                        <p class="text-lg font-semibold capitalize text-slate-200">
+                        <p class="text-xl font-semibold capitalize text-slate-200">
                             {{ $displayData['description'] }}
                         </p>
-                        @if($displayData['feels_like'] !== null)
-                        <p class="text-sm text-slate-300">
-                            Feels like {{ round($this->getConvertedTemperature($displayData['feels_like'])) }}°
-                        </p>
-                        @endif
                     </div>
                 </div>
 
-                @if($isToday && $latest->insight)
-                <div class="mt-4 border-t border-slate-700/50 pt-3">
-                    <p class="text-sm text-slate-400">{{ $latest->insight }}</p>
+                <!-- Right Column: Details -->
+                <div class="border-l border-slate-700/50 pl-6">
+                    @php
+                        $details = [
+                            ['icon' => 'heroicon-o-beaker', 'label' => 'Humidity', 'value' => is_numeric($displayData['humidity']) ? $displayData['humidity'] . '%' : 'N/A'],
+                            ['icon' => 'heroicon-o-arrow-down-on-square', 'label' => 'Pressure', 'value' => is_numeric($displayData['pressure']) ? $displayData['pressure'] . ' hPa' : 'N/A'],
+                            ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? round($displayData['wind_speed']) . ' km/h' : 'N/A'],
+                        ];
+                    @endphp
+
+                    <div class="space-y-4">
+                        @foreach($details as $index => $detail)
+                            <div class="flex items-center gap-4 @if($detail['value'] === 'N/A') opacity-50 @endif">
+                                <x-dynamic-component :component="$detail['icon']" class="h-7 w-7 text-cyan-300" />
+                                <div class="flex-1">
+                                    <p class="text-sm text-slate-400">{{ $detail['label'] }}</p>
+                                    <p class="text-lg font-semibold text-white">{{ $detail['value'] }}</p>
+                                </div>
+                            </div>
+                            @if($index < count($details) - 1)
+                                <div class="border-b border-slate-800"></div>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
-                @endif
             </div>
         </div>
 
-        <!-- Bottom Details Grid (Redesigned) -->
-        <div class="relative grid grid-cols-3 gap-px border-t border-white/10 bg-slate-900/50 p-4">
-            @php
-                $details = [
-                    ['icon' => 'heroicon-o-beaker', 'label' => 'Humidity', 'value' => is_numeric($displayData['humidity']) ? $displayData['humidity'] . '%' : 'N/A'],
-                    ['icon' => 'heroicon-o-arrow-down-on-square', 'label' => 'Pressure', 'value' => is_numeric($displayData['pressure']) ? $displayData['pressure'] . ' hPa' : 'N/A'],
-                    ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? round($displayData['wind_speed']) . ' km/h' : 'N/A'],
-                ];
-            @endphp
-
-            @foreach($details as $detail)
-                <div class="flex items-center gap-3 p-2 @if($detail['value'] === 'N/A') opacity-50 @endif">
-                    <x-dynamic-component :component="$detail['icon']" class="h-6 w-6 text-cyan-300" />
-                    <div>
-                        <p class="text-xs text-slate-400">{{ $detail['label'] }}</p>
-                        <p class="font-semibold text-white">{{ $detail['value'] }}</p>
-                    </div>
+        <!-- Footer: Sunrise/Sunset -->
+        @if($isToday && $latest->sunrise && $latest->sunset && $timezoneString)
+        <div class="grid grid-cols-2 gap-px border-t border-white/10 bg-slate-900/50 px-6 py-4">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/icons/sunrise.svg') }}" alt="Sunrise" class="h-10 w-10">
+                <div>
+                    <p class="text-sm text-slate-400">Sunrise</p>
+                    <p class="text-lg font-semibold text-white">
+                        {{ \Carbon\Carbon::createFromTimestamp($latest->sunrise)->setTimezone($timezoneString)->format('H:i') }}
+                    </p>
                 </div>
-            @endforeach
+            </div>
+            <div class="flex items-center gap-4 justify-end border-l border-slate-700/50 pl-6">
+                 <img src="{{ asset('images/icons/sunset.svg') }}" alt="Sunset" class="h-10 w-10">
+                <div>
+                    <p class="text-sm text-slate-400">Sunset</p>
+                    <p class="text-lg font-semibold text-white">
+                        {{ \Carbon\Carbon::createFromTimestamp($latest->sunset)->setTimezone($timezoneString)->format('H:i') }}
+                    </p>
+                </div>
+            </div>
         </div>
+        @endif
     @else
         <div class="flex h-full items-center justify-center p-5 text-center">
             <p class="text-slate-400">Weather data is currently unavailable.</p>
