@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\WeatherDashboardController;
 
 /*
@@ -21,26 +22,34 @@ Route::get('/register', [AuthController::class, 'registerView']);
 
 Route::post('/register', [AuthController::class, 'register']);
 
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])
+    ->name('auth.google');
+
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+    ->name('auth.google.callback');
+
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
-| Protected Routes
+| Weather Routes
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
+Route::get('/', [WeatherDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/', [WeatherDashboardController::class, 'index'])->name('dashboard');
-    
-    Route::get('/comparison', [WeatherDashboardController::class, 'comparison'])->name('comparison');
-    
-    Route::get('/leaderboard', [WeatherDashboardController::class, 'leaderboard'])->name('leaderboard');
-    
-    Route::get('/history', [WeatherDashboardController::class, 'history'])->name('history');
+Route::get('/dashboard', [WeatherDashboardController::class, 'index']);
 
-});
+Route::get('/comparison', [WeatherDashboardController::class, 'comparison'])->name('comparison');
+
+Route::get('/leaderboard', [WeatherDashboardController::class, 'leaderboard'])
+    ->middleware('auth')
+    ->name('leaderboard');
+
+Route::get('/history', [WeatherDashboardController::class, 'history'])
+    ->middleware('auth')
+    ->name('history');
 
 /*
 |--------------------------------------------------------------------------

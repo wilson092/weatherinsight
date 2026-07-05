@@ -109,15 +109,27 @@
 
     <!-- Animated Cloud Background Elements -->
     <div class="absolute top-10 left-5 md:left-20 float-cloud">
-        <div class="cloud-shape" style="width: 120px; height: 40px;"></div>
+        <div class="relative h-12 w-[140px]">
+            <div class="cloud-shape absolute bottom-0 left-0 h-10 w-[120px]"></div>
+            <div class="absolute -top-1 left-8 h-12 w-12 rounded-full bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.05)]"></div>
+            <div class="absolute top-1 right-4 h-9 w-9 rounded-full bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.05)]"></div>
+        </div>
     </div>
 
     <div class="absolute top-32 right-10 md:right-20 drift-cloud" style="animation-delay: 1s;">
-        <div class="cloud-shape" style="width: 100px; height: 35px;"></div>
+        <div class="relative h-10 w-[118px]">
+            <div class="cloud-shape absolute bottom-0 left-2 h-8 w-[98px]"></div>
+            <div class="absolute -top-1 left-6 h-10 w-10 rounded-full bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.05)]"></div>
+            <div class="absolute top-0 right-4 h-8 w-8 rounded-full bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.05)]"></div>
+        </div>
     </div>
 
     <div class="absolute bottom-20 left-10 md:left-32 float-cloud" style="animation-delay: 2s;">
-        <div class="cloud-shape" style="width: 90px; height: 30px;"></div>
+        <div class="relative h-9 w-[106px]">
+            <div class="cloud-shape absolute bottom-0 left-0 h-7 w-[86px]"></div>
+            <div class="absolute -top-1 left-6 h-9 w-9 rounded-full bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.05)]"></div>
+            <div class="absolute top-0 right-3 h-7 w-7 rounded-full bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.05)]"></div>
+        </div>
     </div>
 
     <!-- Sun Element -->
@@ -147,7 +159,6 @@
             </p>
         </div>
 
-        <!-- Error Messages -->
         @if ($errors->any())
             <div class="mb-6 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
                 <div class="font-semibold mb-1">Login Failed</div>
@@ -196,6 +207,23 @@
                 Sign In
             </button>
         </form>
+
+        <div class="divider">
+            <span>or continue with</span>
+        </div>
+
+        <a
+            href="{{ route('auth.google') }}"
+            class="btn-google flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-3 font-semibold text-gray-700 hover:shadow-md"
+        >
+            <svg viewBox="0 0 48 48" class="h-5 w-5" aria-hidden="true">
+                <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.652 32.657 29.386 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.038l5.657-5.657C34.075 5.353 29.358 3 24 3 12.955 3 4 11.955 4 23s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.038l5.657-5.657C34.075 5.353 29.358 3 24 3 15.318 3 7.841 7.924 6.306 14.691z"/>
+                <path fill="#4CAF50" d="M24 43c5.191 0 9.819-1.984 13.36-5.215l-6.172-5.225C29.134 34.317 26.715 35 24 35c-5.366 0-9.618-3.329-11.288-8.013l-6.522 5.026C7.69 39.154 15.201 43 24 43z"/>
+                <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.018 2.867-3.06 5.213-5.78 6.56l.002-.001 6.172 5.225C35.258 37.772 40 33 40 23c0-1.341-.138-2.65-.389-3.917z"/>
+            </svg>
+            <span>Sign in with Google</span>
+        </a>
 
         <!-- Sign Up Link -->
         <div class="mt-8 text-center text-gray-600">

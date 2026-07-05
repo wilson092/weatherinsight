@@ -60,31 +60,62 @@
                         <span>Comparison</span>
                         <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
                     </a>
-                    <a href="/leaderboard" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
-                        <span>Leaderboard</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="/history" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
-                        <span>History</span>
-                        <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
-                    </a>
+                    @auth
+                        <a href="/leaderboard" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
+                            <span>Leaderboard</span>
+                            <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                        </a>
+                        <a href="/history" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
+                            <span>History</span>
+                            <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                        </a>
+                    @else
+                        <button type="button" @click="alert('Silakan login terlebih dahulu untuk mengakses halaman ini.')" class="group relative px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-cyan-300">
+                            <span>Leaderboard</span>
+                            <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-0 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                        </button>
+                        <button type="button" @click="alert('Silakan login terlebih dahulu untuk mengakses halaman ini.')" class="group relative px-4 py-2 text-sm font-semibold text-white transition-colors hover:text-cyan-300">
+                            <span>History</span>
+                            <span class="absolute bottom-0 left-0 h-0.5 w-full scale-x-100 bg-cyan-400 transition-transform group-hover:scale-x-100"></span>
+                        </button>
+                    @endauth
                 </div>
 
                 <!-- Right Section: Search & User -->
                 <div class="flex items-center gap-2 sm:gap-3">
                     <!-- User Info (Hidden on mobile) -->
-                    <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-3 py-2 sm:flex lg:px-4">
-                        <x-heroicon-o-user-circle class="h-5 w-5 text-cyan-300" />
-                        <span class="text-sm font-semibold text-white">{{ auth()->user()->name }}</span>
-                    </div>
+                    @auth
+                        <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-slate-950/25 px-3 py-2 sm:flex lg:px-4">
+                            <x-heroicon-o-user-circle class="h-5 w-5 text-cyan-300" />
+                            <span class="text-sm font-semibold text-white">{{ auth()->user()->name }}</span>
+                        </div>
 
-                    <!-- Logout Button (Hidden on mobile) -->
-                    <form method="POST" action="/logout" class="hidden sm:block">
-                        @csrf
-                        <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
-                            <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
-                        </button>
-                    </form>
+                        <!-- Logout Button (Hidden on mobile) -->
+                        <form method="POST" action="/logout" class="hidden sm:block">
+                            @csrf
+                            <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/20 bg-rose-500/10 text-rose-300 transition hover:bg-rose-500 hover:text-white" title="Logout">
+                                <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
+                            </button>
+                        </form>
+                    @else
+                        <div class="hidden items-center gap-2 sm:flex">
+                            <a href="/login" class="inline-flex h-10 items-center rounded-full border border-white/15 px-4 text-sm font-semibold text-white/90 transition hover:border-white/30 hover:bg-white/5">
+                                Login
+                            </a>
+                            <a href="/register" class="inline-flex h-10 items-center rounded-full bg-cyan-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
+                                Sign Up
+                            </a>
+                        </div>
+
+                        <div class="flex items-center gap-2 sm:hidden">
+                            <a href="/login" class="inline-flex h-9 items-center rounded-full border border-white/15 px-3 text-xs font-semibold text-white/90 transition hover:border-white/30 hover:bg-white/5">
+                                Login
+                            </a>
+                            <a href="/register" class="inline-flex h-9 items-center rounded-full bg-cyan-400 px-3 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300">
+                                Sign Up
+                            </a>
+                        </div>
+                    @endauth
 
                     <!-- Mobile Menu Button -->
                     <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/25 text-white transition hover:bg-slate-950/40 lg:hidden">
@@ -109,14 +140,20 @@
          class="fixed inset-x-0 top-20 z-40 px-4 sm:top-[88px] sm:px-6 lg:hidden">
         <div class="glass-panel mx-auto max-w-7xl overflow-hidden rounded-3xl">
             <div class="flex flex-col p-4">
-                <!-- Mobile User Info -->
-                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:hidden">
-                    <x-heroicon-o-user-circle class="h-6 w-6 text-cyan-300" />
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">User</p>
-                        <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
+                @auth
+                    <!-- Mobile User Info -->
+                    <div class="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/25 p-3 sm:hidden">
+                        <x-heroicon-o-user-circle class="h-6 w-6 text-cyan-300" />
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">User</p>
+                            <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <a href="/login" class="mb-4 flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/20 sm:hidden">
+                        Sign In
+                    </a>
+                @endauth
 
                 <!-- Mobile Navigation Links -->
                 <div class="space-y-1">
@@ -126,22 +163,33 @@
                     <a href="/comparison" @click="mobileMenuOpen = false" class="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
                         Comparison
                     </a>
-                    <a href="/leaderboard" @click="mobileMenuOpen = false" class="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
-                        Leaderboard
-                    </a>
-                    <a href="/history" class="block rounded-xl bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-300 transition-colors hover:bg-cyan-400/20">
-                        History
-                    </a>
+                    @auth
+                        <a href="/leaderboard" @click="mobileMenuOpen = false" class="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                            Leaderboard
+                        </a>
+                        <a href="/history" class="block rounded-xl bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-300 transition-colors hover:bg-cyan-400/20">
+                            History
+                        </a>
+                    @else
+                        <button type="button" @click="alert('Silakan login terlebih dahulu untuk mengakses halaman ini.'); mobileMenuOpen = false" class="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                            Leaderboard
+                        </button>
+                        <button type="button" @click="alert('Silakan login terlebih dahulu untuk mengakses halaman ini.'); mobileMenuOpen = false" class="block w-full rounded-xl bg-cyan-400/10 px-4 py-3 text-left text-sm font-semibold text-cyan-300 transition-colors hover:bg-cyan-400/20">
+                            History
+                        </button>
+                    @endauth
                 </div>
 
-                <!-- Mobile Logout -->
-                <form method="POST" action="/logout" class="mt-4 sm:hidden">
-                    @csrf
-                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300 transition hover:bg-rose-500 hover:text-white">
-                        <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
-                        <span>Logout</span>
-                    </button>
-                </form>
+                @auth
+                    <!-- Mobile Logout -->
+                    <form method="POST" action="/logout" class="mt-4 sm:hidden">
+                        @csrf
+                        <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300 transition hover:bg-rose-500 hover:text-white">
+                            <x-heroicon-o-arrow-right-start-on-rectangle class="h-5 w-5" />
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                @endauth
             </div>
         </div>
     </div>

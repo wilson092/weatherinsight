@@ -1,55 +1,135 @@
-# Prompt: Audit Akurasi Data & Perbaiki Keterbacaan Hourly Forecast
+# Prompt: Atur Alur Akses (Public vs Protected Routes) + Integrasi Login Google (Socialite)
+
+## ⚠️ BATASAN PENTING
+- **Migration BOLEH dibuat** untuk task ini SECARA KHUSUS jika memang dibutuhkan untuk kolom OAuth (misal `google_id`, `avatar`) di tabel `users` — ini pengecualian dari larangan sebelumnya karena memang esensial untuk fitur Google Login. Konfirmasi dulu ke saya sebelum menjalankan migration jika ada perubahan skema pada tabel yang sudah ada.
+- **JANGAN mengubah konfigurasi Docker** kecuali menambahkan environment variable baru (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`) ke file `.env` — ini BUKAN perubahan Docker, cukup tambah variable environment aplikasi.
+- Tidak perlu rebuild/restart container kecuali untuk install package baru via composer (`composer require laravel/socialite`), yang bisa dijalankan di dalam container yang sudah berjalan.
 
 ## Konteks
-Fitur timezone sudah berhasil (card menampilkan "UTC+02:00" untuk Paris, jam lokal 17:50 sudah benar). Namun Hourly Forecast masih terasa membingungkan (screenshot `paris-dashboard.png` terlampir):
+Aplikasi WeatherInsight akan di-hosting ke VPS untuk publik. Saat ini semua halaman (Dashboard, Comparison, Leaderboard, History) kemungkinan bisa diakses tanpa login (atau butuh login untuk semua, perlu dicek kondisi saat ini). Saya ingin mengatur alur akses sebagai berikut, dan menambahkan opsi login via Google.
 
-1. **Keterbacaan buruk** — grafik garis di atas card per-jam tidak punya referensi visual yang jelas (tidak ada gridline, tidak ada pembeda siang/malam, angka suhu di atas grafik terasa mengambang tanpa terhubung jelas ke titik datanya di bawah).
-2. **Kecurigaan data tidak akurat** — saat scroll ke jam-jam tertentu (misal sekitar 22:00), muncul suhu yang terasa tidak masuk akal dibanding jam-jam di sekitarnya (naik-turun tidak logis untuk pola suhu harian normal).
+## A. Atur Alur Akses: Public vs Protected Routes
 
-## A. Audit Akurasi Data Suhu Per Jam
+### 1. Halaman Publik (Bisa Diakses TANPA Login)
+- **Dashboard** (`/` atau `/dashboard`) — bisa diakses siapa saja, termasuk pengunjung yang belum login. Fitur pencarian kota, cuaca real-time, hourly forecast, weather map, risk assessment tetap berfungsi penuh tanpa perlu akun.
+- **Comparison** (`/comparison`) — sama, bisa diakses publik tanpa login.
 
-### 1. Verifikasi Urutan Logis Suhu
-- Cek SEMUA slot jam yang ditampilkan di Hourly Forecast (bukan cuma yang terlihat di layar awal, scroll penuh sampai slot terakhir) untuk kota Paris dan minimal 1 kota lain.
-- Pastikan pola suhu mengikuti logika wajar: biasanya turun setelah matahari terbenam, mencapai titik terendah menjelang subuh, lalu naik lagi setelah matahari terbit — TIDAK ADA lonjakan aneh di tengah malam yang tidak sesuai pola ini.
-- Jika ditemukan ada slot jam dengan suhu yang melompat tidak wajar (misal naik drastis di jam 22:00-23:00 padahal jam sebelum-sesudahnya turun), ini indikasi data API tidak ter-parsing dengan benar atau ada pergeseran index saat mapping `list[]` dari response `/data/2.5/forecast` ke tampilan.
+### 2. Halaman Protected (WAJIB Login)
+- **Leaderboard** (`/leaderboard`) — jika user belum login dan mencoba akses, redirect ke halaman `/login`.
+- **History** (`/history`) — sama, wajib login.
 
-### 2. Cek Ulang Sinkronisasi Timezone dengan Data Suhu
-- Pastikan setelah konversi timezone (yang sudah diperbaiki sebelumnya untuk mengatasi error `InvalidTimeZoneException`), data suhu yang di-attach ke SETIAP slot jam juga ikut bergeser dengan benar sesuai jam yang sudah dikonversi — jangan sampai LABEL jam sudah benar (lokal) tapi NILAI suhu yang ditempelkan ke label tersebut masih dari index/urutan yang salah (tertukar antara data asli UTC dengan label yang sudah dikonversi ke lokal).
-- Test spesifik: ambil response mentah dari API untuk Paris, cocokkan manual timestamp UTC → offset +2 jam → apakah suhu di jam lokal hasil konversi SAMA PERSIS dengan suhu yang ditampilkan di UI untuk jam tersebut.
+### 3. Redirect Setelah Login
+- Jika user belum login mencoba mengakses `/leaderboard` atau `/history`, sistem harus redirect ke `/login`, DAN setelah berhasil login, user diarahkan KEMBALI ke halaman yang tadinya ingin diakses (bukan selalu ke Dashboard).
+- Implementasi: gunakan mekanisme `intended URL` bawaan Laravel (`redirect()->intended()`) yang sudah otomatis menangani ini jika middleware `auth` diterapkan dengan benar pada route Leaderboard dan History.
 
-## B. Perbaiki Keterbacaan Visual Grafik & Card Per-Jam
+### 4. Middleware yang Perlu Diterapkan
+- Terapkan middleware `auth` (Laravel default) pada route/group route untuk Leaderboard dan History.
+- Route Dashboard dan Comparison TIDAK perlu middleware `auth` — biarkan bisa diakses guest.
+- Cek `routes/web.php` dan sesuaikan grouping route sesuai pembagian ini.
 
-### 1. Tambahkan Gridline pada Grafik
-- Tambahkan garis bantu vertikal tipis (`stroke-slate-700/30`) di setiap titik data pada grafik, sejajar dengan label jam di sumbu X — ini membantu mata mengaitkan titik data dengan label jamnya.
+### 5. Navbar — Tampilkan Status Login
+- Jika user belum login: tampilkan tombol "Login" atau "Sign In" di navbar (pojok kanan, menggantikan area "User Account" yang sekarang selalu tampil).
+- Jika user sudah login: tetap tampilkan seperti sekarang ("User Account" dengan nama/avatar + tombol logout).
+- Menu navbar "Leaderboard" dan "History" tetap TERLIHAT untuk guest (jangan disembunyikan), tapi begitu diklik akan redirect ke login jika belum authenticated — ini lebih baik daripada menyembunyikan menu (supaya guest tahu fitur ini ada dan tertarik untuk daftar).
 
-### 2. Tambahkan Tooltip Saat Hover
-- Saat kursor/mouse diarahkan ke titik tertentu pada grafik garis, tampilkan tooltip kecil yang menunjukkan jam + suhu tepat di titik tersebut — ini akan sangat membantu verifikasi visual dan kenyamanan baca, terutama karena angka suhu di atas grafik saat ini terasa "mengambang" tanpa penghubung jelas ke titik data.
+## B. Integrasi Login via Google (Laravel Socialite)
 
-### 3. Beda Visual Siang vs Malam
-- Beri sedikit shading/background berbeda pada area grafik yang merepresentasikan malam hari (misal jam 18:00-06:00 dengan overlay sedikit lebih gelap) vs siang hari — ini membantu user langsung menangkap pola "kenapa turun di sini, naik di situ" tanpa perlu menghitung manual.
+### 1. Install Package
+```bash
+docker compose exec php composer require laravel/socialite
+```
 
-### 4. Perjelas Alignment Angka Suhu dengan Titik Data
-- Pastikan angka suhu yang ditampilkan di atas grafik (misal "30°", "26°", dst) posisinya PERSIS lurus di atas titik data yang bersangkutan pada grafik, bukan hanya kira-kira sejajar. Gunakan koordinat yang sama (x-position) antara label angka dan titik data di SVG/canvas grafik.
+### 2. Setup Google OAuth Credentials
+- Daftarkan aplikasi di [Google Cloud Console](https://console.cloud.google.com/) → buat OAuth 2.0 Client ID → dapatkan `Client ID` dan `Client Secret`.
+- Tambahkan ke file `.env`:
+GOOGLE_CLIENT_ID=xxx
+GOOGLE_CLIENT_SECRET=xxx
+GOOGLE_REDIRECT_URI=https://weather.test/auth/google/callback
+(Sesuaikan `GOOGLE_REDIRECT_URI` dengan domain final saat sudah di-hosting ke VPS, gunakan domain production, bukan `weather.test` yang cuma untuk local development.)
 
-### 5. Perjelas Card Per-Jam di Bawah Grafik
-- Pastikan card per-jam (jam, ikon, suhu, %hujan) tersusun dalam urutan yang SAMA PERSIS dengan urutan titik di grafik atasnya — user harus bisa langsung mencocokkan titik di grafik dengan card di bawahnya tanpa bingung urutan.
+- Tambahkan konfigurasi di `config/services.php`:
+```php
+'google' => [
+    'client_id' => env('GOOGLE_CLIENT_ID'),
+    'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    'redirect' => env('GOOGLE_REDIRECT_URI'),
+],
+```
+
+### 3. Migration Tambahan (Jika Diperlukan)
+- Cek tabel `users` — jika belum ada kolom untuk menyimpan `google_id` dan `avatar` (opsional, untuk foto profil dari Google), buat migration baru khusus untuk ini:
+```php
+Schema::table('users', function (Blueprint $table) {
+    $table->string('google_id')->nullable()->unique();
+    $table->string('avatar')->nullable();
+    $table->string('password')->nullable()->change(); // agar user Google tidak wajib punya password
+});
+```
+
+### 4. Buat Route & Controller untuk Google OAuth
+```php
+// routes/web.php
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
+```
+
+```php
+// app/Http/Controllers/GoogleAuthController.php
+public function redirect()
+{
+    return Socialite::driver('google')->redirect();
+}
+
+public function callback()
+{
+    $googleUser = Socialite::driver('google')->user();
+
+    $user = User::updateOrCreate(
+        ['email' => $googleUser->getEmail()],
+        [
+            'name' => $googleUser->getName(),
+            'google_id' => $googleUser->getId(),
+            'avatar' => $googleUser->getAvatar(),
+            'email_verified_at' => now(),
+        ]
+    );
+
+    Auth::login($user);
+
+    return redirect()->intended('/dashboard');
+}
+```
+
+### 5. Update Halaman Login (Tambah Tombol "Sign in with Google")
+- Di halaman login (`login.blade.php` atau sejenis), tambahkan tombol "Sign in with Google" di bawah tombol "Sign In" yang sudah ada, dipisahkan dengan divider "atau" ("or continue with").
+- Style tombol: putih dengan border, logo Google berwarna di kiri teks, mengikuti pola umum tombol "Sign in with Google" (bisa pakai icon Google resmi via CDN/SVG).
+- Tombol ini mengarah ke route `/auth/google` yang sudah dibuat.
+- Tetap pertahankan form email/password manual yang sudah ada sebagai alternatif — Google Sign-In sebagai TAMBAHAN, bukan pengganti.
+
+## C. Polish Halaman Login (Opsional, Sambil Dikerjakan)
+- 2 elemen putih pill kosong di pojok kiri atas dan kiri bawah (kemungkinan dekorasi awan) terlihat tidak jelas bentuknya — perjelas jadi bentuk awan yang lebih terlihat, atau hapus jika tidak jadi dipakai.
+- Pastikan halaman login tetap konsisten secara branding (logo cloud cyan, nama "WeatherInsight") dengan tema aplikasi secara keseluruhan.
 
 ## Ketentuan Teknis
-- Untuk audit data (bagian A), buat log sementara/debug print urutan `list[]` dari API vs hasil final yang ditampilkan, untuk membandingkan apakah ada index yang tertukar saat konversi timezone.
-- Untuk perbaikan visual (bagian B), gunakan library chart yang sudah dipakai saat ini (jika custom SVG, tambahkan elemen gridline/tooltip manual; jika pakai chart library seperti Chart.js/Recharts, aktifkan fitur tooltip & gridline bawaan library tersebut).
-- Tidak perlu API tambahan, tidak ada migration baru, tidak ada perubahan Docker.
+- Migration HANYA untuk menambah kolom `google_id`, `avatar`, dan membuat `password` nullable di tabel `users` — tidak ada perubahan skema lain.
+- Install package via composer di dalam container yang sudah berjalan, jangan rebuild image.
+- Tambahkan environment variable Google OAuth ke `.env`, bukan hardcode di kode.
+- Test alur lengkap: guest buka Dashboard (harus bisa) → guest coba klik Leaderboard (harus redirect ke login) → login pakai Google → harus balik ke halaman Leaderboard (bukan ke Dashboard) → logout → ulangi test untuk History.
 
 ## Deliverable
-- Laporan hasil audit: apakah ditemukan anomali suhu, dan jika ada, penjelasan root cause + perbaikannya.
-- Grafik Hourly Forecast dengan gridline, tooltip hover, shading siang/malam, dan alignment angka suhu yang presisi.
-- Screenshot hasil akhir untuk Paris dan minimal 1 kota lain, termasuk screenshot saat hover di beberapa titik grafik untuk membuktikan tooltip berfungsi.
+- Route Dashboard & Comparison bebas diakses tanpa login.
+- Route Leaderboard & History wajib login, redirect ke halaman asal setelah login berhasil.
+- Tombol "Sign in with Google" berfungsi penuh di halaman login.
+- Migration baru (jika diperlukan) untuk kolom `google_id`, `avatar` di tabel `users`.
+- Screenshot: halaman login dengan tombol Google baru, alur redirect saat guest coba akses Leaderboard/History.
 
 ## Checklist Verifikasi
-- [ ] Semua slot jam (scroll penuh) menunjukkan pola suhu yang logis, tidak ada lonjakan aneh yang tidak wajar.
-- [ ] Data suhu per-jam sudah tersinkronisasi benar dengan label jam yang sudah dikonversi ke waktu lokal (tidak tertukar index).
-- [ ] Grafik punya gridline yang membantu membaca titik data.
-- [ ] Tooltip muncul saat hover di titik grafik, menampilkan jam + suhu yang akurat.
-- [ ] Ada perbedaan visual (shading) antara periode siang dan malam pada grafik.
-- [ ] Angka suhu di atas grafik sejajar presisi dengan titik data di bawahnya.
-- [ ] Urutan card per-jam konsisten dengan urutan titik di grafik.
-- [ ] Test di minimal 2 kota berbeda timezone.
+- [ ] Dashboard bisa diakses tanpa login.
+- [ ] Comparison bisa diakses tanpa login.
+- [ ] Leaderboard redirect ke `/login` jika belum login, dan kembali ke Leaderboard setelah berhasil login.
+- [ ] History redirect ke `/login` jika belum login, dan kembali ke History setelah berhasil login.
+- [ ] Tombol "Sign in with Google" muncul di halaman login dan berfungsi (redirect ke Google, lalu kembali dan otomatis login).
+- [ ] User yang login via Google otomatis tersimpan/terupdate di tabel `users` dengan `google_id` terisi.
+- [ ] Form login email/password manual tetap berfungsi seperti biasa.
+- [ ] Navbar menampilkan status login yang sesuai (tombol Login untuk guest, User Account untuk yang sudah login).
+- [ ] Environment variable Google OAuth sudah ditambahkan ke `.env` (development dulu, nanti disesuaikan saat deploy ke VPS).

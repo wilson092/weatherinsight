@@ -38,13 +38,13 @@ class AuthController extends Controller
         $user = Auth::user();
 
         // ADMIN KE FILAMENT
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin') && ! $request->session()->has('url.intended')) {
 
             return redirect('/admin');
         }
 
-        // USER BIASA KE DASHBOARD
-        return redirect('/');
+        // USER BIASA KE DASHBOARD ATAU INTENDED URL
+        return redirect()->intended('/dashboard');
     }
 
     public function register(Request $request)
@@ -65,7 +65,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect('/');
+        return redirect()->intended('/dashboard');
     }
 
     public function logout(Request $request)
