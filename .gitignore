@@ -10,3 +10,7 @@ src/node_modules/
 # Environment files
 .env
 src/.env
+
+# VPS Configuration (JANGAN DI-PUSH!)
+nginx/default.conf
+docker-compose.yml
