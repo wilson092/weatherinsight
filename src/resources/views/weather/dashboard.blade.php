@@ -244,7 +244,7 @@
 
             <div class="hidden h-full items-center gap-7 lg:flex">
                 <a href="/" class="relative flex h-full items-center text-sm font-bold text-white">
-                    Dashboard
+                    Dashboard nksndkvksndsdv
                     <span class="absolute bottom-0 left-0 h-0.5 w-full bg-cyan-400"></span>
                 </a>
                 <a href="/comparison" class="flex h-full items-center text-sm font-semibold text-slate-300 transition hover:text-cyan-300">Comparison</a>
