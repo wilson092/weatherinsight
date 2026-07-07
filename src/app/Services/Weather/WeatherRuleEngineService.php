@@ -11,28 +11,37 @@ class WeatherRuleEngineService
 {
     public function analyze(WeatherHistory $weather): array
     {
+        // 1. Composite Score Analysis for "Weather Risk Assessment"
+        $assessmentAnalysis = $this->getCompositeScoreAnalysis($weather);
+
+        // 2. Temperature-based Analysis for "Weather Recommendation"
+        $recommendationAnalysis = $this->getTemperatureBasedAnalysis($weather);
+
+        return [
+            'assessment' => $assessmentAnalysis,
+            'recommendation' => $recommendationAnalysis,
+        ];
+    }
+
+    /**
+     * Analyzes weather based on a composite score from all active rules.
+     */
+    private function getCompositeScoreAnalysis(WeatherHistory $weather): array
+    {
         $analysis = $this->calculateRiskScore($weather);
         $rawScore = $analysis['score'];
         $maxPossibleScore = $analysis['max_score'];
         $triggeredRules = $analysis['triggered_rules'];
-        $allRules = $analysis['all_rules']; // Get all rules for context
+        $allRules = $analysis['all_rules'];
 
-        // Normalize the score to a 0-100 scale
-        $normalizedScore = ($maxPossibleScore > 0) ? ($rawScore / $maxPossibleScore) * 100 : 0;
+        $riskCategory = RiskCategory::forScore($rawScore);
 
-        $riskCategory = RiskCategory::forScore($normalizedScore);
-
-        if ($riskCategory) {
-            $risk = $riskCategory->name;
-            $riskLevel = $riskCategory->risk_level;
-            $recommendation = $riskCategory->recommendation ?? 'No specific recommendation available.';
-            $insight = $riskCategory->insight ?? 'No specific insight available.';
-        } else {
-            $risk = 'N/A';
-            $riskLevel = 'unknown';
-            $recommendation = 'No risk category found for the calculated score.';
-            $insight = 'No risk category found for the calculated score.';
-        }
+        $risk = $riskCategory->name ?? 'N/A';
+        $riskLevel = $riskCategory->risk_level ?? 'unknown';
+        $recommendation = $riskCategory->recommendation ?? 'No specific recommendation available.';
+        $insight = $riskCategory->insight ?? 'No risk category found for the calculated score.';
+        
+        $displayScore = ($maxPossibleScore > 0) ? round(($rawScore / $maxPossibleScore) * 100) : 0;
 
         return [
             'risk' => $risk,
@@ -40,51 +49,137 @@ class WeatherRuleEngineService
             'risk_category' => $riskCategory,
             'recommendation' => $recommendation,
             'insight' => $insight,
-            'score' => round($normalizedScore),
-            'max_score' => 100, // The gauge max is now always 100
+            'score' => $rawScore,
+            'display_score' => $displayScore,
+            'max_score' => $maxPossibleScore,
             'triggered_rules' => $triggeredRules,
-            'all_rules' => $allRules, // Pass all rules for detailed display
-            'weather_data' => $weather, // Pass the weather data itself
+            'all_rules' => $allRules,
+            'weather_data' => $weather,
         ];
     }
 
+    /**
+     * Analyzes weather based solely on the temperature parameter.
+     */
+    private function getTemperatureBasedAnalysis(WeatherHistory $weather): array
+    {
+        $temperature = $weather->temperature;
+        
+        // This logic is now dedicated to the recommendation component.
+        // It uses the same RiskCategory table but interprets min/max score as temperature.
+        // To make this work without changing the seeder back, we'll assume the seeder is for scores.
+        // We need a separate way to define temperature risks. Let's hardcode for now as per the user's logic.
+        
+        $riskCategory = null;
+        if ($temperature <= 20) {
+            $riskCategory = RiskCategory::where('risk_level', 'low')->first();
+        } elseif ($temperature > 20 && $temperature <= 30) {
+            $riskCategory = RiskCategory::where('risk_level', 'medium')->first();
+        } else { // > 30
+            $riskCategory = RiskCategory::where('risk_level', 'high')->first();
+        }
+
+        if (!$riskCategory) {
+             return [
+                'risk' => 'Unknown',
+                'risk_level' => 'unknown',
+                'recommendation' => 'Temperature risk categories not configured correctly.',
+                'insight' => 'Please check the RiskCategory seeder.',
+                'weather_data' => $weather,
+            ];
+        }
+
+        return [
+            'risk' => $riskCategory->name,
+            'risk_level' => $riskCategory->risk_level,
+            'recommendation' => $riskCategory->recommendation,
+            'insight' => $riskCategory->insight,
+            'weather_data' => $weather,
+        ];
+    }
+
+    /**
+     * Calculates the composite risk score from all active weather rules.
+     */
     public function calculateRiskScore(WeatherHistory $weather): array
     {
         $score = 0;
         $maxScore = 0;
         $triggeredRules = [];
-        $allActiveRules = WeatherRule::where('is_active', true)->get();
+        // Explicitly order by ID to ensure consistent ordering
+        $allActiveRules = WeatherRule::where('is_active', true)
+            ->orderBy('id')
+            ->get();
         $maxScore = $allActiveRules->sum('score_weight');
 
         $rulesByType = $allActiveRules->groupBy('rule_type');
 
+        // Debug: Log all weather attributes
+        Log::debug('weather_analysis_start', [
+            'city' => $weather->city ?? 'unknown',
+            'temperature' => $weather->temperature,
+            'humidity' => $weather->humidity,
+            'pressure' => $weather->pressure,
+            'wind_speed' => $weather->wind_speed,
+            'total_rules' => count($allActiveRules),
+            'rule_types' => $rulesByType->keys()->toArray(),
+        ]);
+
         foreach ($rulesByType as $type => $rules) {
             $value = $weather->{$type};
+            
+            Log::debug("checking_type_{$type}", [
+                'current_value' => $value,
+                'is_null' => is_null($value),
+                'rules_for_type' => $rules->count(),
+            ]);
+
             if (is_null($value)) {
                 continue;
             }
 
             $matchedRule = null;
             // For each type, find the first rule that matches.
-            foreach ($rules as $rule) {
-                if ($this->isRuleMet($value, $rule)) {
+            foreach ($rules as $ruleIndex => $rule) {
+                $isMet = $this->isRuleMet($value, $rule);
+                
+                Log::debug("rule_evaluation", [
+                    'type' => $type,
+                    'rule_index' => $ruleIndex,
+                    'rule_id' => $rule->id,
+                    'rule_name' => $rule->name,
+                    'rule_operator' => $rule->operator,
+                    'rule_threshold' => $rule->threshold_value,
+                    'actual_value' => $value,
+                    'is_met' => $isMet,
+                ]);
+
+                if ($isMet) {
                     $matchedRule = $rule;
+                    Log::info('Rule triggered', [
+                        'rule' => $matchedRule->name,
+                        'type' => $type,
+                        'value' => $value,
+                        'threshold' => $matchedRule->threshold_value,
+                        'operator' => $matchedRule->operator,
+                        'score_added' => $matchedRule->score_weight,
+                    ]);
                     break; // Stop at the first match for this type
                 }
             }
 
             if ($matchedRule) {
-                Log::info('Rule triggered', [
-                    'rule' => $matchedRule->name,
-                    'type' => $type,
-                    'value' => $value,
-                    'threshold' => $matchedRule->threshold_value,
-                    'score_added' => $matchedRule->score_weight,
-                ]);
                 $score += $matchedRule->score_weight;
                 $triggeredRules[] = $matchedRule;
             }
         }
+
+        Log::debug('analysis_complete', [
+            'final_score' => $score,
+            'max_score' => $maxScore,
+            'triggered_rules_count' => count($triggeredRules),
+            'triggered_rule_names' => collect($triggeredRules)->pluck('name')->toArray(),
+        ]);
 
         return [
             'score' => $score,
@@ -94,6 +189,9 @@ class WeatherRuleEngineService
         ];
     }
 
+    /**
+     * Checks if a given value meets the condition of a specific rule.
+     */
     private function isRuleMet($value, WeatherRule $rule): bool
     {
         if (is_null($value)) {

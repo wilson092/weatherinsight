@@ -418,8 +418,8 @@
 
             <!-- Bottom Section: Risk Analysis + Other components -->
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                <x-weather.risk-analysis :latest="$latest" :analysis="$riskAnalysis" />
-                <x-weather.alert-center :alerts="$alerts" :riskAnalysis="$riskAnalysis" :latest="$latest" />
+                <x-weather.risk-analysis :latest="$latest" :analysis="$riskAssessment" />
+                <x-weather.alert-center :alerts="$alerts" :assessment="$riskAssessment" :recommendation="$weatherRecommendation" :latest="$latest" />
             </div>
         </main>
 

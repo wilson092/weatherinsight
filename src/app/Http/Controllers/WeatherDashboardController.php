@@ -41,8 +41,11 @@ class WeatherDashboardController extends Controller
             ->reverse();
 
         // WEATHER INTELLIGENCE LAYER
-        $riskAnalysis = $latest ? $ruleEngine->analyze($latest) : null;
-        $alerts = $alertService->fromAnalysis($riskAnalysis);
+        $analysisResult = $latest ? $ruleEngine->analyze($latest) : null;
+        $riskAssessment = $analysisResult['assessment'] ?? null;
+        $weatherRecommendation = $analysisResult['recommendation'] ?? null;
+
+        $alerts = $alertService->fromAnalysis($riskAssessment); // Alerts are based on the composite score
         $leaderboards = $leaderboardService->rankings();
 
         return view('weather.dashboard', [
@@ -50,7 +53,8 @@ class WeatherDashboardController extends Controller
             'history' => $history,
             'forecast' => $forecast,
             'city' => $city,
-            'riskAnalysis' => $riskAnalysis,
+            'riskAssessment' => $riskAssessment,
+            'weatherRecommendation' => $weatherRecommendation,
             'alerts' => $alerts,
             'leaderboards' => $leaderboards,
         ]);
@@ -68,7 +72,8 @@ class WeatherDashboardController extends Controller
             ->first();
         
         // Primary city risk analysis
-        $primaryAnalysis = $primaryWeather ? $ruleEngine->analyze($primaryWeather) : null;
+        $primaryAnalysisResult = $primaryWeather ? $ruleEngine->analyze($primaryWeather) : null;
+        $primaryAnalysis = $primaryAnalysisResult['assessment'] ?? null;
 
         // Comparison city
         $comparisonCity = $request->get('comparison_city');
@@ -77,7 +82,9 @@ class WeatherDashboardController extends Controller
             : null;
         
         $comparisonWeather = $comparisonData ? data_get($comparisonData, 'weather') : null;
-        $comparisonAnalysis = $comparisonWeather ? $ruleEngine->analyze($comparisonWeather) : null;
+        $comparisonAnalysisResult = $comparisonWeather ? $ruleEngine->analyze($comparisonWeather) : null;
+        $comparisonAnalysis = $comparisonAnalysisResult['assessment'] ?? null;
+
 
         // Generate Comparison Summary
         $summary = $comparisonService->generateComparisonSummary(
@@ -90,10 +97,10 @@ class WeatherDashboardController extends Controller
         return view('weather.comparison', [
             'primaryCity' => $primaryCity,
             'primaryWeather' => $primaryWeather,
-            'primaryAnalysis' => $primaryAnalysis,
+            'primaryAnalysis' => $primaryAnalysis, // Pass only the assessment part
             'comparisonCity' => $comparisonCity,
             'comparisonWeather' => $comparisonWeather,
-            'comparisonAnalysis' => $comparisonAnalysis,
+            'comparisonAnalysis' => $comparisonAnalysis, // Pass only the assessment part
             'comparisonError' => data_get($comparisonData, 'error'),
             'summary' => $summary,
         ]);

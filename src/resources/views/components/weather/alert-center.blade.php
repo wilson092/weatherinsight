@@ -1,26 +1,36 @@
-@props(['alerts', 'riskAnalysis', 'latest' => null])
+@props(['alerts', 'assessment', 'recommendation', 'latest' => null])
 
 @php
-    $triggeredRules = collect($riskAnalysis['triggered_rules'] ?? []);
+    // --- Data for Alert Center (from composite score) ---
+    $triggeredRules = collect($assessment['triggered_rules'] ?? []);
     $hasAlerts = $triggeredRules->isNotEmpty() || count($alerts) > 0;
-    $recommendation = trim($riskAnalysis['recommendation'] ?? $latest?->recommendation ?? 'Monitor weather conditions and stay informed of any changes.');
-    $insight = $riskAnalysis['insight'] ?? $latest?->insight ?? 'Current conditions are within normal parameters.';
-    $riskCategory = $riskAnalysis['risk_category'] ?? $latest?->risk_category;
-    $riskLevel = $riskAnalysis['risk_level'] ?? $latest?->risk_level ?? 'low';
-    $riskName = $riskAnalysis['risk'] ?? $riskCategory?->name ?? ucfirst($riskLevel).' Risk';
-    $riskKey = match (true) {
-        str_contains(strtolower($riskLevel), 'extreme') => 'Extreme',
-        str_contains(strtolower($riskLevel), 'high') => 'High',
-        str_contains(strtolower($riskLevel), 'medium') => 'Medium',
+    $assessmentRiskLevel = $assessment['risk_level'] ?? 'low';
+    $assessmentRiskKey = match (true) {
+        str_contains(strtolower($assessmentRiskLevel), 'extreme') => 'Extreme',
+        str_contains(strtolower($assessmentRiskLevel), 'high') => 'High',
+        str_contains(strtolower($assessmentRiskLevel), 'medium') => 'Medium',
         default => 'Low',
     };
+
+    // --- Data for Recommendation (from temperature-only analysis) ---
+    $recText = trim($recommendation['recommendation'] ?? 'Monitor weather conditions.');
+    $recInsight = $recommendation['insight'] ?? 'Current conditions are within normal parameters.';
+    $recRiskLevel = $recommendation['risk_level'] ?? 'low';
+    $recRiskName = $recommendation['risk'] ?? ucfirst($recRiskLevel).' Risk';
+    $recRiskKey = match (true) {
+        str_contains(strtolower($recRiskLevel), 'extreme') => 'Extreme',
+        str_contains(strtolower($recRiskLevel), 'high') => 'High',
+        str_contains(strtolower($recRiskLevel), 'medium') => 'Medium',
+        default => 'Low',
+    };
+    
     $updatedAt = $latest?->recorded_at ?? now();
 
     $riskColors = [
         'Low' => 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
-        'Medium' => 'border-yellow-400/30 bg-yellow-500/10 text-yellow-300',
-        'High' => 'border-orange-400/30 bg-orange-500/10 text-orange-300',
-        'Extreme' => 'border-red-400/30 bg-red-500/10 text-red-300',
+        'Medium' => 'border-amber-400/30 bg-amber-500/10 text-amber-300',
+        'High' => 'border-rose-400/30 bg-rose-500/10 text-rose-300',
+        'Extreme' => 'border-purple-400/30 bg-purple-500/10 text-purple-300',
     ];
 
     $unitMap = [
@@ -57,7 +67,7 @@
         return trim($rule->operator.' '.$formatValue($rule->threshold_value, $unit));
     };
 
-    $recommendedActions = collect(preg_split('/[\r\n.;]+/', $recommendation))
+    $recommendedActions = collect(preg_split('/[\r\n.;]+/', $recText))
         ->map(fn ($item) => trim($item, " \t\n\r\0\x0B-*"))
         ->filter()
         ->take(4);
@@ -96,9 +106,6 @@
                 </span>
                 <h2 id="alert-center-title" class="text-base font-black text-white">Weather Alert Center</h2>
             </div>
-            <span class="rounded-full border px-3 py-1 text-xs font-black uppercase {{ $riskColors[$riskKey] }}">
-                {{ $riskName }}
-            </span>
         </div>
 
         @if(!$hasAlerts)
@@ -121,8 +128,8 @@
                     @php
                         $unit = $unitMap[$rule->rule_type] ?? '';
                         $currentValue = $latest ? $latest->getAttribute($rule->rule_type) : null;
-                        $severity = $riskLevel;
-                        $alertStyle = $riskColors[$riskKey];
+                        $severity = $assessmentRiskLevel;
+                        $alertStyle = $riskColors[$assessmentRiskKey];
                         $icon = $iconMap[$rule->rule_type] ?? 'heroicon-o-exclamation-triangle';
                     @endphp
 
@@ -134,9 +141,8 @@
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="font-black text-white">{{ $rule->name }}</h3>
-                                    <span class="rounded-full bg-white/[.08] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide">{{ $severity }}</span>
                                 </div>
-                                <dl class="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+                                <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
                                     <div>
                                         <dt class="text-slate-400">Current Value</dt>
                                         <dd class="mt-0.5 font-bold text-white" x-text="formatValue({{ $currentValue ?? 'null' }}, '{{ $unit }}', '{{ $rule->rule_type }}')"></dd>
@@ -145,15 +151,11 @@
                                         <dt class="text-slate-400">Threshold</dt>
                                         <dd class="mt-0.5 font-bold text-white">{{ $formatThreshold($rule, $unit) }}</dd>
                                     </div>
-                                    <div>
-                                        <dt class="text-slate-400">Severity</dt>
-                                        <dd class="mt-0.5 font-bold text-white">{{ $severity }}</dd>
-                                    </div>
-                                    <div>
+                                    <div class="col-span-2">
                                         <dt class="text-slate-400">Trigger Time</dt>
                                         <dd class="mt-0.5 font-bold text-white">{{ $updatedAt->format('H:i') }}</dd>
                                     </div>
-                                </dl>
+                                 </dl>
                             </div>
                         </div>
                     </div>
@@ -161,7 +163,7 @@
 
                 @if($triggeredRules->isEmpty())
                     @foreach($alerts as $alert)
-                        <div class="rounded-2xl border p-4 {{ $riskColors[$riskKey] }}">
+                        <div class="rounded-2xl border p-4 {{ $riskColors[$assessmentRiskKey] }}">
                             <div class="flex items-start gap-3">
                                 <span class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white/[.08]">
                                     <x-dynamic-component :component="$alert['icon']" class="h-5 w-5" />
@@ -169,13 +171,13 @@
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h3 class="font-black text-white">{{ $alert['title'] }}</h3>
-                                        <span class="rounded-full bg-white/[.08] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide">{{ $alert['level'] ?? $riskLevel }}</span>
+                                        <span class="rounded-full bg-white/[.08] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide">{{ $alert['level'] ?? $assessmentRiskLevel }}</span>
                                     </div>
                                     <p class="mt-2 text-sm leading-6 text-slate-300">{{ $alert['message'] }}</p>
                                     <dl class="mt-3 grid gap-2 text-xs sm:grid-cols-2">
                                         <div>
                                             <dt class="text-slate-400">Severity</dt>
-                                            <dd class="mt-0.5 font-bold text-white">{{ $alert['level'] ?? $riskLevel }}</dd>
+                                            <dd class="mt-0.5 font-bold text-white">{{ $alert['level'] ?? $assessmentRiskLevel }}</dd>
                                         </div>
                                         <div>
                                             <dt class="text-slate-400">Trigger Time</dt>
@@ -201,8 +203,8 @@
 
         <div class="flex flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-teal-950/35 p-5">
             <div>
-                <p class="text-base font-black text-emerald-300">{{ $recommendation }}</p>
-                <p class="mt-4 text-sm leading-6 text-slate-300">{{ $insight }}</p>
+                <p class="text-base font-black text-emerald-300">{{ $recText }}</p>
+                <p class="mt-4 text-sm leading-6 text-slate-300">{{ $recInsight }}</p>
             </div>
 
             @if($recommendedActions->isNotEmpty())
@@ -221,9 +223,9 @@
 
             <div class="mt-5 flex items-center justify-between gap-3">
                 <span class="text-xs font-bold uppercase text-slate-500">Current Risk</span>
-                <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase {{ $riskColors[$riskKey] }}">
+                <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase {{ $riskColors[$recRiskKey] }}">
                     <x-heroicon-o-shield-exclamation class="h-3.5 w-3.5" />
-                    {{ $riskName }}
+                    {{ $recRiskName }}
                 </span>
             </div>
         </div>

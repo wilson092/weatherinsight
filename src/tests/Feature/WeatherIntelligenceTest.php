@@ -120,6 +120,27 @@ it('uses only the latest snapshot of each city for leaderboards', function () {
         ->and($leaderboard['hottest']->first()->city)->toBe('Bandung');
 });
 
+it('detects high humidity conditions correctly - should trigger Kelembapan Tinggi not Suhu Tinggi', function () {
+    // Test case: High humidity (88%) but low temperature (25°C)
+    // Expected: Only Kelembapan Tinggi rule should trigger
+    $weather = createWeather('New York', [
+        'temperature' => 25,      // Below threshold (35°C)
+        'humidity' => 88,         // Above threshold (85%)
+        'pressure' => 1010,       // Normal (not < 1000 or > 1020)
+        'wind_speed' => 10,       // Below threshold (20 m/s)
+    ]);
+
+    $ruleEngine = app(\App\Services\Weather\WeatherRuleEngineService::class);
+    $analysis = $ruleEngine->analyze($weather);
+
+    // Verify that only humidity rule triggered
+    $triggeredRuleNames = collect($analysis['triggered_rules'])->pluck('name')->toArray();
+    
+    expect($triggeredRuleNames)->toContain('Kelembapan Tinggi')
+        ->and($triggeredRuleNames)->not->toContain('Suhu Tinggi')
+        ->and($triggeredRuleNames)->toHaveCount(1);
+});
+
 it('fetches and stores a comparison city when no history exists', function () {
     Http::fake([
         'api.openweathermap.org/*' => Http::response([

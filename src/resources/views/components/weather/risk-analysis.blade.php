@@ -2,15 +2,15 @@
 
 @php
     // Use normalized values directly from the service
-    $score = (int) ($analysis['score'] ?? 0);
-    $maxScore = (int) ($analysis['max_score'] ?? 100);
+    $score = (int) ($analysis['display_score'] ?? 0);
+    $maxScore = 100; // The display score is always out of 100
     $riskLevel = $analysis['risk_level'] ?? 'low';
     $insight = $analysis['insight'] ?? 'Current weather parameters are being monitored.';
     $triggeredRules = $analysis['triggered_rules'] ?? [];
     $allRules = $analysis['all_rules'] ?? collect();
     $weatherData = $analysis['weather_data'] ?? null;
 
-    $percentage = min(100, max(0, $score)); // Score is already a percentage
+    $percentage = min(100, max(0, $score));
     $radius = 54;
     $circumference = 2 * pi() * $radius;
     $offset = $circumference - ($percentage / 100 * $circumference);
@@ -119,8 +119,8 @@
                     />
                 </svg>
                 <div class="relative">
-                    <p class="text-4xl font-black text-white">{{ $score }}</p>
-                    <p class="text-sm font-bold text-slate-300">/{{ $maxScore }}</p>
+                    <p class="text-4xl font-black text-white">{{ $analysis['score'] }}</p>
+                    <p class="text-sm font-bold text-slate-300">/{{ $analysis['max_score'] }}</p>
                 </div>
             </div>
             <p class="mt-2 text-sm font-black uppercase {{ $tone['text'] }}">{{ $riskLevel }} Risk</p>

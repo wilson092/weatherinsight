@@ -15,9 +15,14 @@ class WeatherHistoryObserver
     {
         $analysis = $this->ruleEngine->analyze($weather);
 
-        $weather->risk_score = $analysis['score'];
-        $weather->risk_level = $analysis['risk_level'];
-        $weather->recommendation = $analysis['recommendation'];
-        $weather->insight = $analysis['insight'];
+        // The observer should save the composite score analysis to the history record.
+        $assessment = $analysis['assessment'] ?? null;
+
+        if ($assessment) {
+            $weather->risk_score = $assessment['score'];
+            $weather->risk_level = $assessment['risk_level'];
+            $weather->recommendation = $assessment['recommendation'];
+            $weather->insight = $assessment['insight'];
+        }
     }
 }
