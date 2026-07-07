@@ -62,12 +62,17 @@ class WeatherSnapshotService
 
         $analysis = $this->ruleEngine->analyze($weather);
 
-        $weather->update([
-            'risk_score' => $analysis['score'],
-            'risk_level' => $analysis['risk_level'],
-            'recommendation' => $analysis['recommendation'],
-            'insight' => $analysis['insight'],
-        ]);
+        // We should use the composite score ('assessment') for the initial record.
+        $assessment = $analysis['assessment'] ?? null;
+
+        if ($assessment) {
+            $weather->update([
+                'risk_score' => $assessment['score'],
+                'risk_level' => $assessment['risk_level'],
+                'recommendation' => $assessment['recommendation'],
+                'insight' => $assessment['insight'],
+            ]);
+        }
 
         return $weather->fresh();
     }

@@ -66,25 +66,15 @@ class WeatherRuleEngineService
         $temperature = $weather->temperature;
         
         // This logic is now dedicated to the recommendation component.
-        // It uses the same RiskCategory table but interprets min/max score as temperature.
-        // To make this work without changing the seeder back, we'll assume the seeder is for scores.
-        // We need a separate way to define temperature risks. Let's hardcode for now as per the user's logic.
-        
-        $riskCategory = null;
-        if ($temperature <= 20) {
-            $riskCategory = RiskCategory::where('risk_level', 'low')->first();
-        } elseif ($temperature > 20 && $temperature <= 30) {
-            $riskCategory = RiskCategory::where('risk_level', 'medium')->first();
-        } else { // > 30
-            $riskCategory = RiskCategory::where('risk_level', 'high')->first();
-        }
+        // It uses the RiskCategory table dynamically, interpreting the score range as a temperature range.
+        $riskCategory = RiskCategory::forScore($temperature);
 
         if (!$riskCategory) {
              return [
-                'risk' => 'Unknown',
+                'risk' => 'Not Set',
                 'risk_level' => 'unknown',
-                'recommendation' => 'Temperature risk categories not configured correctly.',
-                'insight' => 'Please check the RiskCategory seeder.',
+                'recommendation' => 'No risk category is configured for the current temperature.',
+                'insight' => 'Please check the Risk Categories in the admin panel to ensure a valid range exists for the current temperature.',
                 'weather_data' => $weather,
             ];
         }
