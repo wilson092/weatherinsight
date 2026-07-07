@@ -4,6 +4,7 @@ namespace App\Services\Weather;
 
 use App\Models\TrackedCity;
 use App\Models\WeatherHistory;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class WeatherSnapshotService
@@ -23,7 +24,9 @@ class WeatherSnapshotService
 
         // First, try to get a very recent snapshot to avoid API calls
         $recent = $this->snapshots->forCity($city);
-        if ($recent) {
+
+        // If a recent record exists and it's not older than 5 minutes, use it.
+        if ($recent && $recent->recorded_at->gt(now()->subMinutes(5))) {
             return $recent;
         }
 
@@ -73,7 +76,13 @@ class WeatherSnapshotService
                 'insight' => $assessment['insight'],
             ]);
         }
+        
+        $freshWeather = $weather->fresh();
 
-        return $weather->fresh();
+        // Manually update the cache with the newly fetched data.
+        $cacheKey = "weather_snapshot_" . str_replace(' ', '_', strtolower($city));
+        Cache::put($cacheKey, $freshWeather, now()->addMinutes(5));
+
+        return $freshWeather;
     }
 }

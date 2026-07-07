@@ -5,6 +5,7 @@ namespace App\Services\Weather;
 use App\Models\WeatherHistory;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class LatestWeatherSnapshotService
 {
@@ -29,10 +30,14 @@ class LatestWeatherSnapshotService
 
     public function forCity(string $city): ?WeatherHistory
     {
-        return WeatherHistory::query()
-            ->where('city', $city)
-            ->latest('recorded_at')
-            ->latest('id')
-            ->first();
+        $cacheKey = "weather_snapshot_" . str_replace(' ', '_', strtolower($city));
+
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($city) {
+            return WeatherHistory::query()
+                ->where('city', $city)
+                ->latest('recorded_at')
+                ->latest('id')
+                ->first();
+        });
     }
 }
