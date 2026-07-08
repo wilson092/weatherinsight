@@ -10,6 +10,7 @@ class OpenWeatherService
 {
     public function current(string $city = 'Jakarta'): array
     {
+        $city = ucwords(strtolower($city));
         $cacheKey = "weather:current:{$city}";
         $cacheDuration = now()->addMinutes(10);
 
@@ -36,6 +37,7 @@ class OpenWeatherService
 
     public function forecast(string $city = 'Jakarta'): array
     {
+        $city = ucwords(strtolower($city));
         $cacheKey = "weather:forecast:{$city}";
         $cacheDuration = now()->addMinutes(10);
 
