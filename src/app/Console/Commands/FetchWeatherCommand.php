@@ -75,16 +75,6 @@ class FetchWeatherCommand extends Command
             'recorded_at' => now(),
         ]);
 
-        // ANALISIS RULE ENGINE
-        $analysis = $ruleEngine->analyze($weather);
-
-        // UPDATE HASIL ANALISIS
-        $weather->update([
-            'recommendation' => $analysis['recommendation'],
-            'insight' => $analysis['insight'],
-            'risk_level' => $analysis['risk_level'],
-        ]);
-
         $this->info("Weather fetched for {$city}");
     }
 

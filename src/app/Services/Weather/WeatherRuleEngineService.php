@@ -104,6 +104,15 @@ class WeatherRuleEngineService
 
         $rulesByType = $allActiveRules->groupBy('rule_type');
 
+        // Map rule types to the correct WeatherHistory model properties
+        $propertyMap = [
+            'temperature' => 'temperature',
+            'humidity' => 'humidity',
+            'pressure' => 'pressure',
+            'wind' => 'wind_speed',
+            // Add other mappings here if new rule types are created
+        ];
+
         // Debug: Log all weather attributes
         Log::debug('weather_analysis_start', [
             'city' => $weather->city ?? 'unknown',
@@ -116,9 +125,17 @@ class WeatherRuleEngineService
         ]);
 
         foreach ($rulesByType as $type => $rules) {
-            $value = $weather->{$type};
+            // Use the property map to get the correct attribute name
+            $property = $propertyMap[$type] ?? null;
+            if (!$property) {
+                Log::warning("No property mapping found for rule type: {$type}");
+                continue;
+            }
+            
+            $value = $weather->{$property};
             
             Log::debug("checking_type_{$type}", [
+                'property_used' => $property,
                 'current_value' => $value,
                 'is_null' => is_null($value),
                 'rules_for_type' => $rules->count(),
@@ -128,8 +145,7 @@ class WeatherRuleEngineService
                 continue;
             }
 
-            $matchedRule = null;
-            // For each type, find the first rule that matches.
+            // Evaluate all rules for the type, not just the first one.
             foreach ($rules as $ruleIndex => $rule) {
                 $isMet = $this->isRuleMet($value, $rule);
                 
@@ -145,22 +161,18 @@ class WeatherRuleEngineService
                 ]);
 
                 if ($isMet) {
-                    $matchedRule = $rule;
+                    $score += $rule->score_weight;
+                    $triggeredRules[] = $rule;
                     Log::info('Rule triggered', [
-                        'rule' => $matchedRule->name,
+                        'rule' => $rule->name,
                         'type' => $type,
                         'value' => $value,
-                        'threshold' => $matchedRule->threshold_value,
-                        'operator' => $matchedRule->operator,
-                        'score_added' => $matchedRule->score_weight,
+                        'threshold' => $rule->threshold_value,
+                        'operator' => $rule->operator,
+                        'score_added' => $rule->score_weight,
                     ]);
-                    break; // Stop at the first match for this type
+                    // Removed the 'break' to allow multiple rules of the same type to be triggered
                 }
-            }
-
-            if ($matchedRule) {
-                $score += $matchedRule->score_weight;
-                $triggeredRules[] = $matchedRule;
             }
         }
 
