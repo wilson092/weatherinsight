@@ -67,9 +67,10 @@ class WeatherHistory extends Model
         return RiskCategory::forScore((int) $this->risk_score);
     }
 
-    public static function getHottestCities()
+    public static function getHottestCities(int $userId)
     {
         return self::query()
+            ->where('user_id', $userId)
             ->select('city', 'temperature', 'weather_icon', 'weather_description')
             ->orderByDesc('temperature')
             ->groupBy('city', 'temperature', 'weather_icon', 'weather_description')
@@ -77,9 +78,10 @@ class WeatherHistory extends Model
             ->get();
     }
 
-    public static function getColdestCities()
+    public static function getColdestCities(int $userId)
     {
         return self::query()
+            ->where('user_id', $userId)
             ->select('city', 'temperature', 'weather_icon', 'weather_description')
             ->orderBy('temperature')
             ->groupBy('city', 'temperature', 'weather_icon', 'weather_description')
@@ -87,9 +89,10 @@ class WeatherHistory extends Model
             ->get();
     }
 
-    public static function getMostHumidCities()
+    public static function getMostHumidCities(int $userId)
     {
         return self::query()
+            ->where('user_id', $userId)
             ->select('city', 'humidity')
             ->orderByDesc('humidity')
             ->groupBy('city', 'humidity')
@@ -97,9 +100,10 @@ class WeatherHistory extends Model
             ->get();
     }
 
-    public static function getWindiestCities()
+    public static function getWindiestCities(int $userId)
     {
         return self::query()
+            ->where('user_id', $userId)
             ->select('city', 'wind_speed')
             ->orderByDesc('wind_speed')
             ->groupBy('city', 'wind_speed')

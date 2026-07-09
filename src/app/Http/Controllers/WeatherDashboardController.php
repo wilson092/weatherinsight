@@ -35,6 +35,7 @@ class WeatherDashboardController extends Controller
 
         // HISTORY
         $history = WeatherHistory::where('city', $city)
+            ->where('user_id', auth()->id())
             ->latest()
             ->take(10)
             ->get()
@@ -108,10 +109,11 @@ class WeatherDashboardController extends Controller
 
     public function leaderboard()
     {
-        $hottestCities = WeatherHistory::getHottestCities();
-        $coldestCities = WeatherHistory::getColdestCities();
-        $mostHumidCities = WeatherHistory::getMostHumidCities();
-        $windiestCities = WeatherHistory::getWindiestCities();
+        $userId = auth()->id();
+        $hottestCities = WeatherHistory::getHottestCities($userId);
+        $coldestCities = WeatherHistory::getColdestCities($userId);
+        $mostHumidCities = WeatherHistory::getMostHumidCities($userId);
+        $windiestCities = WeatherHistory::getWindiestCities($userId);
 
         return view('weather.leaderboard', compact(
             'hottestCities',
@@ -126,6 +128,7 @@ class WeatherDashboardController extends Controller
         $date = $request->get('date');
 
         $query = WeatherHistory::query()
+            ->where('user_id', auth()->id())
             ->orderBy('recorded_at', 'desc');
 
         if ($date) {
