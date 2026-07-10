@@ -29,6 +29,10 @@ class WeatherDashboardController extends Controller
         // Get latest weather data using the centralized service
         $latest = $snapshotService->getLatest($city, auth()->id());
 
+        if (!$latest) {
+            return redirect()->back()->with('error', 'Kota tidak ditemukan.');
+        }
+
         // Fetch and parse forecast
         $rawForecast = $openWeather->forecast($city);
         $forecast = $forecastParser->parse($rawForecast, $latest->timezone ?? 0);

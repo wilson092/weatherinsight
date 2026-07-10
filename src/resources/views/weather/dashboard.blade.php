@@ -399,6 +399,12 @@
             </button>
         </form>
 
+        @if (session('error'))
+            <div class="mb-4 rounded-lg bg-red-500/20 p-4 text-sm text-red-300" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <!-- Day Tabs -->
         <div class="mb-5">
             @livewire('day-tabs', ['forecast' => $forecast])
