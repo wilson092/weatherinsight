@@ -108,37 +108,6 @@
                 </div>
             </div>
 
-            <!-- Risk Analysis Section -->
-            @if($analysis)
-                <div class="rounded-2xl border border-white/10 bg-white/[.03] p-4">
-                    <div class="mb-3 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <x-heroicon-o-shield-exclamation class="h-5 w-5 text-slate-400" />
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Risk Analysis</span>
-                        </div>
-                        <span @class([
-                            'rounded-full px-3 py-1 text-sm font-semibold',
-                            'bg-green-500/20 text-green-300' => $riskKey($analysis['risk'] ?? null) === 'Low',
-                            'bg-yellow-500/20 text-yellow-300' => $riskKey($analysis['risk'] ?? null) === 'Medium',
-                            'bg-red-500/20 text-red-300' => $riskKey($analysis['risk'] ?? null) === 'High',
-                            'bg-purple-500/20 text-purple-300' => $riskKey($analysis['risk'] ?? null) === 'Extreme',
-                        ])>
-                            {{ $analysis['risk'] ?? 'Unknown' }}
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <div class="h-2 overflow-hidden rounded-full bg-slate-800">
-                                <div 
-                                    class="h-full rounded-full transition-all {{ $riskKey($analysis['risk'] ?? null) === 'Extreme' ? 'bg-purple-400' : ($riskKey($analysis['risk'] ?? null) === 'High' ? 'bg-rose-400' : ($riskKey($analysis['risk'] ?? null) === 'Medium' ? 'bg-amber-400' : 'bg-emerald-400')) }}"
-                                    style="width: {{ min(($analysis['score'] ?? 0), 100) }}%"
-                                ></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-black text-white">{{ $analysis['score'] ?? 0 }}/100</span>
-                    </div>
-                </div>
-            @endif
         @else
             <!-- Empty State -->
             <div class="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[.02] px-6 text-center">
