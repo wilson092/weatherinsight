@@ -31,15 +31,6 @@ class WeatherIntelligenceStatsOverview extends BaseWidget
         })->count();
 
         return [
-            Stat::make('Average Risk Score', number_format($averageRisk, 1) . '/100')
-                ->description('Across latest city snapshots')
-                ->descriptionIcon('heroicon-m-chart-bar')
-                ->color(match (true) {
-                    $averageRisk > 70 => 'danger',
-                    $averageRisk > 30 => 'warning',
-                    default => 'success',
-                }),
-
             Stat::make('Active Alerts', $activeAlerts)
                 ->description('Cities with current weather alerts')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
