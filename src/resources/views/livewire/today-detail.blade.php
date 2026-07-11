@@ -124,8 +124,10 @@
                     @php
                         $details = [
                             ['icon' => 'heroicon-o-beaker', 'label' => 'Humidity', 'value' => is_numeric($displayData['humidity']) ? $displayData['humidity'] . '%' : 'N/A'],
-                            ['icon' => 'heroicon-o-arrow-down-on-square', 'label' => 'Pressure', 'value' => is_numeric($displayData['pressure']) ? $displayData['pressure'] . ' hPa' : 'N/A'],
-                            ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? round($displayData['wind_speed']) . ' km/h' : 'N/A'],
+                            ['icon' => 'heroicon-o-arrow-down-on-square', 'label' => 'Pressure', 'value' => is_numeric($displayData['pressure']) ? number_format((float) $displayData['pressure'], 0, '.', '') . ' hPa' : 'N/A'],
+                            // Wind speed is stored in m/s (raw from OpenWeather API) — label reflects the true unit,
+                            // no fake conversion to km/h.
+                            ['icon' => 'heroicon-o-bars-3-bottom-left', 'label' => 'Wind', 'value' => is_numeric($displayData['wind_speed']) ? number_format((float) $displayData['wind_speed'], 1, '.', '') . ' m/s' : 'N/A'],
                         ];
                     @endphp
 

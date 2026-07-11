@@ -3,7 +3,7 @@
 @php
     // Use normalized values directly from the service
     $riskLevel = $analysis['risk_level'] ?? 'low';
-    $triggeredRules = $analysis['triggered_rules'] ?? [];
+    $triggeredRules = collect($analysis['triggered_rules'] ?? []);
     $allRules = $analysis['all_rules'] ?? collect();
     $weatherData = $analysis['weather_data'] ?? null;
 
@@ -25,36 +25,40 @@
         'uv_index' => '',
     ];
 
-    // --- Logic to consolidate pressure rules ---
-    $rulesToDisplay = [];
-    $pressureRules = $allRules->where('rule_type', 'pressure');
-    $otherRules = $allRules->where('rule_type', '!=', 'pressure')->groupBy('rule_type');
+    $labelMap = [
+        'temperature' => 'Suhu',
+        'humidity' => 'Kelembapan',
+        'wind_speed' => 'Angin',
+        'pressure' => 'Pressure',
+        'visibility' => 'Visibility',
+        'uv_index' => 'UV Index',
+    ];
 
-    // Add non-pressure rules (one per type)
-    foreach ($otherRules as $type => $rules) {
-        $rulesToDisplay[] = $rules->first();
-    }
+    // --- Group ALL active rules by type (no longer dropping duplicates) ---
+    // Each type becomes ONE card. If more than one rule of that type is triggered,
+    // all matching descriptions are shown, not just the first one.
+    $rulesByType = $allRules->groupBy('rule_type');
 
-    // Consolidate and add the pressure rule
-    if ($pressureRules->isNotEmpty()) {
-        $pressureTriggeredRule = collect($triggeredRules)->where('rule_type', 'pressure')->first();
-        $status = 'Normal';
-        $description = null;
+    $cardsToDisplay = $rulesByType->map(function ($rules, $type) use ($triggeredRules, $labelMap) {
+        $triggeredForType = $triggeredRules->where('rule_type', $type);
+        $isTriggered = $triggeredForType->isNotEmpty();
 
-        if ($pressureTriggeredRule) {
-            $status = str_contains(strtolower($pressureTriggeredRule->name), 'low') ? 'Low' : 'High';
-            $description = $pressureTriggeredRule->description ?? null;
+        $statusText = 'Normal';
+        if ($isTriggered && $type === 'pressure') {
+            $first = $triggeredForType->first();
+            $statusText = str_contains(strtolower($first->name), 'low') ? 'Low' : 'High';
+        } elseif ($isTriggered) {
+            $statusText = 'Triggered';
         }
 
-        // Create a representative rule for display
-        $representativePressureRule = $pressureRules->first();
-        $representativePressureRule->name = 'Pressure'; // Consolidated name
-        $representativePressureRule->status = $status;
-        $representativePressureRule->description = $description;
-        $rulesToDisplay[] = $representativePressureRule;
-    }
-    // Sort rules for consistent order
-    $rulesToDisplay = collect($rulesToDisplay)->sortBy('rule_type')->values();
+        return [
+            'rule_type' => $type,
+            'name' => $labelMap[$type] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $type)),
+            'is_triggered' => $isTriggered,
+            'status_text' => $statusText,
+            'descriptions' => $triggeredForType->pluck('description')->filter()->unique()->values(),
+        ];
+    })->sortBy('rule_type')->values();
 @endphp
 
 <section
@@ -82,22 +86,12 @@
 
     <div class="rounded-3xl border border-white/10 bg-slate-950/24 p-4">
         <div class="space-y-2.5">
-            @forelse($rulesToDisplay as $rule)
+            @forelse($cardsToDisplay as $card)
                 @php
-                    $currentValue = $weatherData ? $weatherData->getAttribute($rule->rule_type) : null;
-                    $unit = $unitMap[$rule->rule_type] ?? '';
-                    $icon = $iconMap[$rule->rule_type] ?? 'heroicon-o-exclamation-circle';
-
-                    if ($rule->rule_type === 'pressure') {
-                        $isTriggered = $rule->status !== 'Normal';
-                        $statusText = $rule->status;
-                        $description = $rule->description;
-                    } else {
-                        $triggeredRule = collect($triggeredRules)->where('id', $rule->id)->first();
-                        $isTriggered = (bool)$triggeredRule;
-                        $statusText = $isTriggered ? 'Triggered' : 'Normal';
-                        $description = $isTriggered ? ($triggeredRule->description ?? null) : null;
-                    }
+                    $currentValue = $weatherData ? $weatherData->getAttribute($card['rule_type']) : null;
+                    $unit = $unitMap[$card['rule_type']] ?? '';
+                    $icon = $iconMap[$card['rule_type']] ?? 'heroicon-o-exclamation-circle';
+                    $isTriggered = $card['is_triggered'];
                 @endphp
 
                 <article class="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/45 px-3.5 py-3 transition duration-300 hover:border-cyan-400/40">
@@ -106,13 +100,13 @@
                             <x-dynamic-component :component="$icon" class="h-4 w-4" />
                         </span>
                         <div class="min-w-0">
-                            <p class="truncate text-sm font-semibold text-slate-200">{{ $rule->name }}</p>
+                            <p class="truncate text-sm font-semibold text-slate-200">{{ $card['name'] }}</p>
                             <p class="truncate text-xs {{ $isTriggered ? 'text-amber-300' : 'text-emerald-300' }}">
-                                {{ $statusText }}
+                                {{ $card['status_text'] }}
                                 @if ($currentValue !== null)
                                     &bull;
                                     <span
-                                        x-text="unit === 'F' && '{{ $rule->rule_type }}' === 'temperature' ? convertTemp({{ $currentValue }}).toFixed(1) : {{ is_numeric($currentValue) ? number_format((float) $currentValue, 1) : "'$currentValue'" }}"></span>{{ $unit }}
+                                        x-text="unit === 'F' && '{{ $card['rule_type'] }}' === 'temperature' ? convertTemp({{ $currentValue }}).toFixed(1) : {{ is_numeric($currentValue) ? number_format((float) $currentValue, 1, '.', '') : "'$currentValue'" }}"></span>{{ $unit }}
                                 @endif
                             </p>
                         </div>
@@ -126,9 +120,11 @@
                             </span>
                         @endif
                     </div>
-                    @if ($isTriggered && $description)
-                        <div class="border-t border-slate-800 pt-2.5 text-xs text-slate-400">
-                            <p>{{ $description }}</p>
+                    @if ($isTriggered && $card['descriptions']->isNotEmpty())
+                        <div class="space-y-1.5 border-t border-slate-800 pt-2.5 text-xs text-slate-400">
+                            @foreach ($card['descriptions'] as $description)
+                                <p>{{ $description }}</p>
+                            @endforeach
                         </div>
                     @endif
                 </article>
