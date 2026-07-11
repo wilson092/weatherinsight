@@ -102,18 +102,18 @@
                         alt="{{ $displayData['description'] }}"
                         class="-ml-4 h-36 w-36"
                     >
-                    <div class="flex-1">
-                        <div class="flex items-baseline gap-3">
-                            <p class="text-7xl font-bold">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                            <p class="text-7xl font-bold leading-none">
                                 {{ round($this->getConvertedTemperature($displayData['temp'])) }}°
                             </p>
                             @if($riskBadge)
-                                <span class="rounded-full px-3 py-1 text-sm font-semibold {{ $riskBadge['class'] }}">
+                                <span class="inline-block whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold {{ $riskBadge['class'] }}">
                                     {{ $riskBadge['label'] }}
                                 </span>
                             @endif
                         </div>
-                        <p class="text-xl font-semibold capitalize text-slate-200">
+                        <p class="mt-1 text-xl font-semibold capitalize text-slate-200">
                             {{ $displayData['description'] }}
                         </p>
                     </div>
