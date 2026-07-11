@@ -28,6 +28,15 @@
         display: block;
         margin-top: 0.25rem;
     }
+    .weather-map-popup .weather-map-popup-hint {
+        margin-top: 0.5rem;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-style: italic;
+    }
+    .weather-map-clickable {
+        cursor: pointer;
+    }
 </style>
 
 @php
@@ -86,7 +95,7 @@
                 <div class="relative w-full" style="height: 365px;">
                     <div
                         id="{{ $mapId }}"
-                        class="h-full w-full"
+                        class="h-full w-full weather-map-clickable"
                         data-latitude="{{ (float) $latest->latitude }}"
                         data-longitude="{{ (float) $latest->longitude }}"
                         data-city="{{ $latest?->city ? \Illuminate\Support\Str::title($latest->city) : 'Unavailable' }}"
@@ -304,6 +313,72 @@
                     .openPopup();
 
                 console.log('Weather map marker created:', marker);
+
+                // ---------------------------------------------------------------
+                // Click-to-navigate: klik di mana pun pada peta akan reverse-geocode
+                // koordinat tersebut ke nama kota lalu redirect ke dashboard dengan
+                // ?city=<nama kota>. Backend (WeatherDashboardController) yang akan
+                // menentukan apakah kota tersebut valid di OpenWeatherMap atau tidak;
+                // jika tidak valid, error handling "Kota tidak ditemukan" yang sudah
+                // ada akan otomatis muncul setelah redirect.
+                // ---------------------------------------------------------------
+                let clickMarker = null;
+
+                map.on('click', async (event) => {
+                    const { lat, lng } = event.latlng;
+
+                    if (clickMarker) {
+                        map.removeLayer(clickMarker);
+                    }
+
+                    clickMarker = window.L.marker([lat, lng]).addTo(map);
+                    clickMarker
+                        .bindPopup(
+                            '<div class="weather-map-popup"><span>Mencari lokasi...</span></div>',
+                            { className: 'weather-map-popup' }
+                        )
+                        .openPopup();
+
+                    try {
+                        const response = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=id`
+                        );
+
+                        if (! response.ok) {
+                            throw new Error(`Reverse geocoding request failed with status ${response.status}`);
+                        }
+
+                        const payload = await response.json();
+                        const address = payload.address || {};
+
+                        const cityName =
+                            address.city ||
+                            address.town ||
+                            address.municipality ||
+                            address.county ||
+                            address.state;
+
+                        if (! cityName) {
+                            clickMarker
+                                .setPopupContent('<div class="weather-map-popup"><span>Lokasi tidak dikenali.</span></div>')
+                                .openPopup();
+                            return;
+                        }
+
+                        clickMarker
+                            .setPopupContent(
+                                `<div class="weather-map-popup"><strong>${escapeHtml(cityName)}</strong><span class="weather-map-popup-hint">Memuat data cuaca...</span></div>`
+                            )
+                            .openPopup();
+
+                        window.location.href = `${window.location.pathname}?city=${encodeURIComponent(cityName)}`;
+                    } catch (error) {
+                        console.error('Weather map reverse geocoding failed:', error);
+                        clickMarker
+                            .setPopupContent('<div class="weather-map-popup"><span>Gagal mengambil lokasi. Coba lagi.</span></div>')
+                            .openPopup();
+                    }
+                });
 
                 window.setTimeout(() => {
                     map.invalidateSize();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TrackedCity;
 use App\Models\WeatherHistory;
+use App\Services\Weather\CityNormalizer;
 use App\Services\Weather\ForecastParserService;
 use App\Services\Weather\OpenWeatherService;
 use App\Services\Weather\WeatherAlertService;
@@ -25,6 +26,7 @@ class WeatherDashboardController extends Controller
         ForecastParserService $forecastParser
     ) {
         $city = $request->get('city', 'Jakarta');
+        $city = CityNormalizer::normalize($city);
 
         // Get latest weather data using the centralized service
         $latest = $snapshotService->getLatest($city, auth()->id());
@@ -72,6 +74,7 @@ class WeatherDashboardController extends Controller
 
         // Primary city
         $primaryCity = $request->get('primary_city', 'Jakarta');
+        $primaryCity = CityNormalizer::normalize($primaryCity);
         $primaryWeather = WeatherHistory::where('city', $primaryCity)
             ->latest()
             ->first();
@@ -82,6 +85,7 @@ class WeatherDashboardController extends Controller
 
         // Comparison city
         $comparisonCity = $request->get('comparison_city');
+        $comparisonCity = $comparisonCity ? CityNormalizer::normalize($comparisonCity) : null;
         $comparisonData = $comparisonCity
             ? $comparisonService->findOrFetch($comparisonCity, auth()->id())
             : null;
