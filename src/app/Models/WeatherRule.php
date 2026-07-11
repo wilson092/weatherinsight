@@ -13,7 +13,6 @@ class WeatherRule extends Model
         'threshold_value',
         'min_value',
         'max_value',
-        'score_weight',
         'description',
         'is_active',
     ];

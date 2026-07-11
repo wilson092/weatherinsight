@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('threshold_value', 8, 2)->nullable()->comment('For single value comparisons');
             $table->decimal('min_value', 8, 2)->nullable()->comment('For range comparisons (min)');
             $table->decimal('max_value', 8, 2)->nullable()->comment('For range comparisons (max)');
-            $table->integer('score_weight')->comment('The score to add if the rule is met');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

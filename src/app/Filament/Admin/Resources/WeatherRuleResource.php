@@ -70,10 +70,6 @@ class WeatherRuleResource extends Resource
                     ->numeric()
                     ->visible(fn (callable $get) => $get('operator') === 'between')
                     ->required(fn (callable $get) => $get('operator') === 'between'),
-                TextInput::make('score_weight')
-                    ->label('Bobot Skor')
-                    ->numeric()
-                    ->required(),
                 Textarea::make('description')
                     ->label('Deskripsi')
                     ->columnSpanFull(),
@@ -89,7 +85,6 @@ class WeatherRuleResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('Nama Aturan')->searchable()->sortable(),
                 TextColumn::make('kondisi')->label('Kondisi'),
-                TextColumn::make('score_weight')->label('Bobot Skor')->sortable(),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->filters([

@@ -17,8 +17,7 @@ class WeatherRuleSeeder extends Seeder
                 'rule_type' => 'temperature',
                 'operator' => '>',
                 'threshold_value' => 35,
-                'score_weight' => 20,
-                'description' => 'Suhu di atas 35°C menambah 20 poin risiko.',
+                'description' => 'Suhu yang sangat tinggi dapat meningkatkan risiko dehidrasi dan heat stroke.',
                 'is_active' => true,
             ],
             [
@@ -26,8 +25,7 @@ class WeatherRuleSeeder extends Seeder
                 'rule_type' => 'humidity',
                 'operator' => '>',
                 'threshold_value' => 85,
-                'score_weight' => 25,
-                'description' => 'Kelembaban di atas 85% menambah 25 poin risiko.',
+                'description' => 'Kelembapan yang sangat tinggi dapat membuat cuaca terasa lebih panas dan menyebabkan ketidaknyamanan.',
                 'is_active' => true,
             ],
             [
@@ -35,8 +33,7 @@ class WeatherRuleSeeder extends Seeder
                 'rule_type' => 'wind_speed',
                 'operator' => '>',
                 'threshold_value' => 20,
-                'score_weight' => 15,
-                'description' => 'Kecepatan angin di atas 20 m/s menambah 15 poin risiko.',
+                'description' => 'Angin kencang dapat berbahaya bagi struktur bangunan dan aktivitas di luar ruangan.',
                 'is_active' => true,
             ],
             [
@@ -44,8 +41,7 @@ class WeatherRuleSeeder extends Seeder
                 'rule_type' => 'pressure',
                 'operator' => '<',
                 'threshold_value' => 1000,
-                'score_weight' => 10,
-                'description' => 'Tekanan udara di bawah 1000 hPa menambah 10 poin risiko.',
+                'description' => 'Tekanan udara yang rendah seringkali mengindikasikan potensi cuaca buruk atau badai.',
                 'is_active' => true,
             ],
             [
@@ -53,8 +49,7 @@ class WeatherRuleSeeder extends Seeder
                 'rule_type' => 'pressure',
                 'operator' => '>',
                 'threshold_value' => 1020,
-                'score_weight' => 10,
-                'description' => 'Tekanan udara di atas 1020 hPa menambah 10 poin risiko.',
+                'description' => 'Tekanan udara yang sangat tinggi dapat mempengaruhi kondisi cuaca dan kesehatan beberapa individu.',
                 'is_active' => true,
             ],
         ];

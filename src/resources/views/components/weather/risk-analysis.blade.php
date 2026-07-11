@@ -39,18 +39,18 @@
     if ($pressureRules->isNotEmpty()) {
         $pressureTriggeredRule = collect($triggeredRules)->where('rule_type', 'pressure')->first();
         $status = 'Normal';
-        $scoreContribution = 0;
+        $description = null;
 
         if ($pressureTriggeredRule) {
             $status = str_contains(strtolower($pressureTriggeredRule->name), 'low') ? 'Low' : 'High';
-            $scoreContribution = $pressureTriggeredRule->score_weight;
+            $description = $pressureTriggeredRule->description ?? null;
         }
 
         // Create a representative rule for display
         $representativePressureRule = $pressureRules->first();
         $representativePressureRule->name = 'Pressure'; // Consolidated name
         $representativePressureRule->status = $status;
-        $representativePressureRule->score_contribution = $scoreContribution;
+        $representativePressureRule->description = $description;
         $rulesToDisplay[] = $representativePressureRule;
     }
     // Sort rules for consistent order
@@ -91,32 +91,46 @@
                     if ($rule->rule_type === 'pressure') {
                         $isTriggered = $rule->status !== 'Normal';
                         $statusText = $rule->status;
-                        $scoreContribution = $rule->score_contribution;
+                        $description = $rule->description;
                     } else {
                         $triggeredRule = collect($triggeredRules)->where('id', $rule->id)->first();
                         $isTriggered = (bool)$triggeredRule;
                         $statusText = $isTriggered ? 'Triggered' : 'Normal';
-                        $scoreContribution = $isTriggered ? $triggeredRule->score_weight : 0;
+                        $description = $isTriggered ? ($triggeredRule->description ?? null) : null;
                     }
                 @endphp
 
-                <article class="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/45 px-3 py-2.5 transition duration-300 hover:border-cyan-400/40">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/[.06] text-slate-300">
-                        <x-dynamic-component :component="$icon" class="h-4 w-4" />
-                    </span>
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-semibold text-slate-200">{{ $rule->name }}</p>
-                        <p class="truncate text-xs {{ $isTriggered ? 'text-amber-300' : 'text-emerald-300' }}">
-                            {{ $statusText }}
-                            @if($currentValue !== null)
-                                &bull;
-                                <span x-text="unit === 'F' && '{{ $rule->rule_type }}' === 'temperature' ? convertTemp({{ $currentValue }}).toFixed(1) : {{ is_numeric($currentValue) ? number_format((float) $currentValue, 1) : "'$currentValue'" }}"></span>{{ $unit }}
-                            @endif
-                        </p>
+                <article class="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/45 px-3.5 py-3 transition duration-300 hover:border-cyan-400/40">
+                    <div class="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/[.06] text-slate-300">
+                            <x-dynamic-component :component="$icon" class="h-4 w-4" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold text-slate-200">{{ $rule->name }}</p>
+                            <p class="truncate text-xs {{ $isTriggered ? 'text-amber-300' : 'text-emerald-300' }}">
+                                {{ $statusText }}
+                                @if ($currentValue !== null)
+                                    &bull;
+                                    <span
+                                        x-text="unit === 'F' && '{{ $rule->rule_type }}' === 'temperature' ? convertTemp({{ $currentValue }}).toFixed(1) : {{ is_numeric($currentValue) ? number_format((float) $currentValue, 1) : "'$currentValue'" }}"></span>{{ $unit }}
+                                @endif
+                            </p>
+                        </div>
+                        @if ($isTriggered)
+                            <span class="rounded-full px-2.5 py-1 text-xs font-black bg-amber-400/10 text-amber-300">
+                                Terpicu
+                            </span>
+                        @else
+                            <span class="rounded-full px-2.5 py-1 text-xs font-black bg-emerald-400/10 text-emerald-300">
+                                Aman
+                            </span>
+                        @endif
                     </div>
-                    <span class="rounded-full px-2.5 py-1 text-xs font-black {{ $isTriggered ? 'bg-amber-400/10 text-amber-300' : 'bg-emerald-400/10 text-emerald-300' }}">
-                        +{{ $scoreContribution }}
-                    </span>
+                    @if ($isTriggered && $description)
+                        <div class="border-t border-slate-800 pt-2.5 text-xs text-slate-400">
+                            <p>{{ $description }}</p>
+                        </div>
+                    @endif
                 </article>
             @empty
                 <div class="rounded-2xl border border-dashed border-white/10 py-8 text-center text-sm text-slate-500">
