@@ -64,12 +64,6 @@ class WeatherHistoryResource extends Resource
 
                 TextInput::make('risk_level'),
 
-                TextInput::make('risk_score')
-                    ->numeric()
-                    ->suffix('/100')
-                    ->disabled()
-                    ->dehydrated(false),
-
                 Textarea::make('recommendation')
                     ->columnSpanFull(),
 
@@ -118,12 +112,6 @@ class WeatherHistoryResource extends Resource
                     ->label('Wind')
                     ->suffix(' m/s')
                     ->sortable(),
-
-                TextColumn::make('risk_score')
-                    ->label('Risk Score')
-                    ->suffix('/100')
-                    ->sortable()
-                    ->weight('bold'),
 
                 BadgeColumn::make('weather_main')
                     ->colors([

@@ -67,12 +67,12 @@ class RiskCategoryResource extends Resource
                     ->label('Nama Kategori')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('score_range')
-                    ->label('Rentang Skor')
+                    ->label('Rentang Suhu')
                     ->formatStateUsing(function ($state, RiskCategory $record) {
                         if (is_null($record->max_score)) {
-                            return "≥ {$record->min_score}";
+                            return "≥ {$record->min_score}°C";
                         }
-                        return "{$record->min_score} - {$record->max_score}";
+                        return "{$record->min_score}°C - {$record->max_score}°C";
                     }),
                 Tables\Columns\BadgeColumn::make('risk_level')
                     ->label('Level Risiko')
