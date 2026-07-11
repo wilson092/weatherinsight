@@ -42,6 +42,25 @@
             $timezoneString = $latest->timezone;
         }
     }
+
+    // --- Risk badge resolution (driven by admin-managed Risk Categories) ---
+    $riskBadge = null;
+    if ($isToday && $latest && $latest->risk_level) {
+        $riskKey = match (true) {
+            str_contains(strtolower($latest->risk_level), 'high') || str_contains(strtolower($latest->risk_level), 'tinggi') => 'high',
+            str_contains(strtolower($latest->risk_level), 'medium') || str_contains(strtolower($latest->risk_level), 'sedang') => 'medium',
+            str_contains(strtolower($latest->risk_level), 'low') || str_contains(strtolower($latest->risk_level), 'rendah') => 'low',
+            default => null,
+        };
+
+        if ($riskKey) {
+            $riskBadge = match ($riskKey) {
+                'high' => ['label' => 'High Risk', 'class' => 'bg-red-500/20 text-red-300'],
+                'medium' => ['label' => 'Medium Risk', 'class' => 'bg-yellow-500/20 text-yellow-300'],
+                'low' => ['label' => 'Low Risk', 'class' => 'bg-green-500/20 text-green-300'],
+            };
+        }
+    }
 @endphp
 
 <div class="relative flex h-full flex-col overflow-hidden rounded-2xl glass-panel">
@@ -88,14 +107,9 @@
                             <p class="text-7xl font-bold">
                                 {{ round($this->getConvertedTemperature($displayData['temp'])) }}°
                             </p>
-                            @if($isToday && $latest->risk_level)
-                                <span @class([
-                                    'rounded-full px-3 py-1 text-sm font-semibold',
-                                    'bg-green-500/20 text-green-300' => $latest->risk_level === 'Rendah',
-                                    'bg-yellow-500/20 text-yellow-300' => $latest->risk_level === 'Sedang',
-                                    'bg-red-500/20 text-red-300' => $latest->risk_level === 'Tinggi',
-                                ])>
-                                    {{ \Illuminate\Support\Str::title($latest->risk_level) }}
+                            @if($riskBadge)
+                                <span class="rounded-full px-3 py-1 text-sm font-semibold {{ $riskBadge['class'] }}">
+                                    {{ $riskBadge['label'] }}
                                 </span>
                             @endif
                         </div>
