@@ -52,6 +52,11 @@ class WeatherDashboardController extends Controller
         $riskAssessment = $analysisResult['assessment'] ?? null;
         $weatherRecommendation = $analysisResult['recommendation'] ?? null;
 
+        // Override risk level for today's detail view to match recommendation
+        if ($latest && isset($weatherRecommendation['risk'])) {
+            $latest->risk_level = $weatherRecommendation['risk'];
+        }
+
         $alerts = $alertService->fromAnalysis($riskAssessment); // Alerts are based on the composite score
         $leaderboards = $leaderboardService->rankings();
 

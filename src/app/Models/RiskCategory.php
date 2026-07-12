@@ -12,8 +12,8 @@ class RiskCategory extends Model
     protected $fillable = [
         'name',
         'risk_level',
-        'min_score',
-        'max_score',
+        'suhu_minimal',
+        'suhu_maksimal',
         'color_badge',
         'recommendation',
         'insight',
@@ -22,13 +22,13 @@ class RiskCategory extends Model
 
     public static function forScore(int $score): ?self
     {
-        return static::where('min_score', '<=', $score)
+        return static::where('suhu_minimal', '<=', $score)
             ->where(function ($query) use ($score) {
-                $query->where('max_score', '>=', $score)
-                    ->orWhereNull('max_score');
+                $query->where('suhu_maksimal', '>=', $score)
+                    ->orWhereNull('suhu_maksimal');
             })
             ->where('is_active', true)
-            ->orderBy('min_score')
+            ->orderBy('suhu_minimal')
             ->first();
     }
 }

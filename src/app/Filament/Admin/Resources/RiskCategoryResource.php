@@ -35,12 +35,12 @@ class RiskCategoryResource extends Resource
                         'high' => 'Tinggi',
                     ])
                     ->required(),
-                Forms\Components\TextInput::make('min_score')
-                    ->label('Skor Minimum')
+                Forms\Components\TextInput::make('suhu_minimal')
+                    ->label('Suhu Minimal')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('max_score')
-                    ->label('Skor Maksimum')
+                Forms\Components\TextInput::make('suhu_maksimal')
+                    ->label('Suhu Maksimal')
                     ->helperText('Kosongkan jika tidak ada batas maksimum.')
                     ->numeric(),
                 Forms\Components\Textarea::make('recommendation')
@@ -69,10 +69,10 @@ class RiskCategoryResource extends Resource
                 Tables\Columns\TextColumn::make('score_range')
                     ->label('Rentang Suhu')
                     ->formatStateUsing(function ($state, RiskCategory $record) {
-                        if (is_null($record->max_score)) {
-                            return "≥ {$record->min_score}°C";
+                        if (is_null($record->suhu_maksimal)) {
+                            return "≥ {$record->suhu_minimal}°C";
                         }
-                        return "{$record->min_score}°C - {$record->max_score}°C";
+                        return "{$record->suhu_minimal}°C - {$record->suhu_maksimal}°C";
                     }),
                 Tables\Columns\BadgeColumn::make('risk_level')
                     ->label('Level Risiko')

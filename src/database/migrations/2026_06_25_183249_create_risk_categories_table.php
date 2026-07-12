@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('risk_level');
-            $table->unsignedInteger('min_score');
-            $table->unsignedInteger('max_score')->nullable();
+            $table->unsignedInteger('suhu_minimal');
+            $table->unsignedInteger('suhu_maksimal')->nullable();
             $table->string('color_badge');
             $table->text('recommendation')->nullable();
             $table->text('insight')->nullable();
