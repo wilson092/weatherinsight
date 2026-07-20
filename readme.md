@@ -1,7 +1,7 @@
 **Nama:** Wilson Fabian  
 **NIM:** 2024080198  
-**Domain:** [weatherinsight.online](https://weatherinsight.online)
-**Mata Kuliah:** Pemograman Web CR 002
+**Domain:** [weatherinsight.online](https://weatherinsight.online)  
+**Mata Kuliah:** Pemrograman Web CR002
 
 ---
 
@@ -92,3 +92,4 @@ weatherinsight/
 
 ---
 
+<p align="center">Dibuat dengan Laravel, Filament, dan secangkir kopi ☕</p>
