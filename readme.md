@@ -92,4 +92,3 @@ weatherinsight/
 
 ---
 
-<p align="center">Dibuat dengan Laravel, Filament, dan secangkir kopi ☕</p>
